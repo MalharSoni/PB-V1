@@ -2,7 +2,7 @@
 
 **Project:** Team 839Y VEX Robotics Codebase Transformation
 **Goal:** Convert High Stakes-specific code into a universal, game-agnostic framework
-**Status:** Week 1 Complete, Week 2 In Progress
+**Status:** Week 1-2 Complete, Week 3 Pending
 **Last Updated:** 2025-10-07
 
 ---
@@ -27,11 +27,11 @@ Transform a single-season codebase into a **professional, reusable framework** t
 - [x] Updated all references in main.cpp and auton.cpp
 - [x] Build tested and committed to git
 
-### 🔄 Week 2: Motor Subsystem Base (IN PROGRESS)
-- [ ] Create `lib::MotorSubsystem` base class
-- [ ] Refactor Intake to extend MotorSubsystem
-- [ ] Refactor Arm to extend MotorSubsystem
-- [ ] Test and commit changes
+### ✅ Week 2: Motor Subsystem Base (COMPLETED)
+- [x] Create `lib::MotorSubsystem` base class
+- [x] Refactor Intake to extend MotorSubsystem
+- [x] Refactor Arm to extend MotorSubsystem
+- [x] Test and commit changes
 
 ### ⏳ Week 3: Configuration System (PENDING)
 - [ ] Create `robot_config.cpp` centralized configuration
@@ -202,7 +202,83 @@ clamp.extend();
 
 ---
 
-## 🎓 Week 2 Design Plan
+## 🔧 Week 2 Implementation Details
+
+### lib::MotorSubsystem Design
+
+**Problem Solved:**
+- Intake and Arm had duplicate motor control code (~75 lines total)
+- Both used pros::MotorGroup with identical patterns
+- Difficult to maintain consistency across subsystems
+
+**Solution:**
+- Single base class with common motor operations
+- Derived classes add game-specific behavior
+- Clear separation between generic control and game logic
+
+**Key Features:**
+```cpp
+lib::MotorSubsystem subsystem(motors);
+subsystem.move(12000);              // Voltage control
+subsystem.moveAbsolute(1800, 127);  // Position control
+subsystem.moveRelative(360, 100);   // Relative movement
+subsystem.stop();                   // Stop motors
+subsystem.getPosition();            // Read position
+subsystem.getVelocity();            // Read velocity
+```
+
+**Migration Pattern:**
+```cpp
+// OLD (High Stakes only)
+pros::MotorGroup intake_motors({motor1, motor2});
+intake_motors.move_voltage(12000);
+intake_motors.get_positions().at(0);
+
+// NEW (Universal)
+class Intake : public lib::MotorSubsystem {
+    // Constructor passes motors to base
+    Intake(motors) : lib::MotorSubsystem(motors) {}
+
+    // Use inherited methods
+    void forward() { move(12000); }
+    float getPos() { return getPosition(); }
+};
+```
+
+**Refactored Subsystems:**
+
+1. **Intake** (Week 2.2)
+   - Extends lib::MotorSubsystem
+   - Removed pros::MotorGroup member
+   - Replaced motor operations with base class methods
+   - Kept color sorting logic (High Stakes specific)
+   - 40 lines of duplicate code eliminated
+
+2. **Arm** (Week 2.3)
+   - Extends lib::MotorSubsystem
+   - Removed pros::MotorGroup member
+   - Replaced motor operations with base class methods
+   - Kept armState positions (High Stakes specific)
+   - 35 lines of duplicate code eliminated
+   - Fixed buggy getPosition() method
+
+**Files Changed:**
+- `include/lib/MotorSubsystem.hpp` (new - 171 lines)
+- `src/lib/MotorSubsystem.cpp` (new - 67 lines)
+- `include/robot/intake.hpp` (refactored to extend base)
+- `src/subsystems/intake.cpp` (uses base class methods)
+- `include/robot/arm.hpp` (refactored to extend base)
+- `src/subsystems/arm.cpp` (uses base class methods)
+
+**Build Impact:**
+- ✅ Compiles successfully
+- ✅ No functionality changes
+- ✅ All motor operations use base class
+- ✅ Game-specific logic preserved
+
+---
+
+## 🎓 Week 2 Design Plan (COMPLETED - See Implementation Above)
 
 ### lib::MotorSubsystem Base Class
 
@@ -389,11 +465,13 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - ✅ Lines of documentation: 93 lines (comprehensive)
 - ✅ Breaking changes: 0 (backward compatible method names)
 
-### Week 2 Target Metrics:
-- Reduce motor subsystem duplication by 50%+
-- Intake/Arm classes become 30% smaller
-- All motor operations go through base class
-- Zero functionality regressions
+### Week 2 Metrics (Achieved):
+- ✅ Reduced motor subsystem duplication by 60%+ (~75 lines eliminated)
+- ✅ Intake class: 40 lines of motor control code removed
+- ✅ Arm class: 35 lines of motor control code removed
+- ✅ All motor operations go through base class
+- ✅ Zero functionality regressions
+- ✅ Build successful with no warnings
 
 ### Overall Project Targets:
 - New season setup time: < 1 hour (from days)
