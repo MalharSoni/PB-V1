@@ -167,8 +167,6 @@ subsystems::Arm arm({leftArmMotor}, ARM_PISTON_PORT);
 // ----------------------------------------------------------------------------
 // Other Subsystems
 // ----------------------------------------------------------------------------
-subsystems::Clamp clamp(CLAMP_PORT);
-subsystems::Doinker doinker(DOINKER_PORT);
 subsystems::Movement movement(&chassis);
 subsystems::Auton auton(&chassis);
 subsystems::Selector selector(&intake, &auton);
@@ -178,3 +176,19 @@ subsystems::DistanceAlign distanceAlign(
     6.5,                    // Sensor offset (inches)
     0.0                     // Angle offset (degrees)
 );
+
+// ============================================================================
+// GENERIC PNEUMATIC COMPONENTS (Game-Agnostic)
+// ============================================================================
+// These use the universal lib::Pneumatic class.
+// STUDENTS: For new games, just rename these variables to match your mechanisms!
+//
+// High Stakes examples:
+lib::Pneumatic clamp(CLAMP_PORT);      // Mobile goal clamp
+lib::Pneumatic doinker(DOINKER_PORT);  // Doinker mechanism
+//
+// Future season examples:
+//   lib::Pneumatic wings(WINGS_PORT);
+//   lib::Pneumatic blocker(BLOCKER_PORT);
+//   lib::Pneumatic lift(LIFT_PORT);
+// ============================================================================

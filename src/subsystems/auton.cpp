@@ -135,15 +135,27 @@ ARM SUBSYSTEM:
   arm.readyScoreAlliance();   // Ready to score on alliance stake
   arm.scoreAlliance();        // Score on alliance stake
 
-CLAMP SUBSYSTEM:
+CLAMP / PNEUMATIC SUBSYSTEM:
 ────────────────────────────────────────────────────────────────────────────
-  clamp.clamp_stake();        // Close clamp (grab mobile goal)
-  clamp.declamp_stake();      // Open clamp (release mobile goal)
+  clamp.extend();             // Extend clamp (grab mobile goal)
+  clamp.retract();            // Retract clamp (release mobile goal)
+  clamp.toggle();             // Toggle between extended/retracted
 
-DOINKER SUBSYSTEM:
+  // Alternative method names (all do the same thing):
+  clamp.activate();  / clamp.deactivate();
+  clamp.open();      / clamp.close();
+  clamp.deploy();    / clamp.stow();
+
+DOINKER / PNEUMATIC SUBSYSTEM:
 ────────────────────────────────────────────────────────────────────────────
-  doinker.activate();         // Extend doinker mechanism
-  doinker.deactivate();       // Retract doinker mechanism
+  doinker.extend();           // Extend doinker mechanism
+  doinker.retract();          // Retract doinker mechanism
+  doinker.toggle();           // Toggle between extended/retracted
+
+  // Alternative method names (all do the same thing):
+  doinker.activate();  / doinker.deactivate();
+  doinker.open();      / doinker.close();
+  doinker.deploy();    / doinker.stow();
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TIMING & DELAYS
@@ -182,7 +194,7 @@ void Auton::exampleRoutine() {
     // 2. Move backward and grab mobile goal
     chassis->moveToPoint(0, -24, 2000, {.forwards = false, .maxSpeed = 60});
     chassis->waitUntil(5);  // Continue when within 5 inches
-    clamp.clamp_stake();    // Grab the goal
+    clamp.extend();         // Grab the goal
     pros::delay(200);       // Give clamp time to close
 
     // 3. Start intake and collect first ring
@@ -299,7 +311,7 @@ void Auton::elimSAFEBLUE() {
   chassis->waitUntil(7);
   arm.goToIdle();
   pros::delay(670);
-  clamp.clamp_stake();
+  clamp.extend();
 
   // first ring in the ring stack
   intake.startColourSort();
@@ -360,7 +372,7 @@ void Auton::elimSAFERED() {
   chassis->waitUntil(7);
   arm.goToIdle();
   pros::delay(670);
-  clamp.clamp_stake();
+  clamp.extend();
 
   // first ring in the ring stack
   intake.startColourSort();
@@ -413,7 +425,7 @@ void Auton::swpRED() { //done test on practice field
   chassis->waitUntil(7);
   arm.goToIdle();
   pros::delay(670);
-  clamp.clamp_stake();
+  clamp.extend();
   intake.startColourSort();
   chassis->turnToPoint(-34, -7, 900, {.maxSpeed = 70});
   chassis->waitUntilDone();
@@ -434,14 +446,14 @@ void Auton::swpRED() { //done test on practice field
   // cross to push bot off line and grab MOGO
   chassis->moveToPoint(34, -37, 1600, {.maxSpeed = 100});
   chassis->waitUntil(19);
-  clamp.declamp_stake();
+  clamp.retract();
   intake.deactivate();
   pros::delay(700);
   chassis->moveToPoint(24, -36, 1600, {.forwards = false, .maxSpeed = 100});
   chassis->turnToHeading(180, 800);
   chassis->moveToPoint(25, -20, 1000, {.forwards = false, .maxSpeed = 80});
   pros::delay(550);
-  clamp.clamp_stake();
+  clamp.extend();
   intake.startColourSort();
   chassis->turnToPoint(44, -22, 500, {.maxSpeed = 110});
 
@@ -469,7 +481,7 @@ void Auton::swpBLUE() { //done test on practice field
   chassis->waitUntil(7);
   arm.goToIdle();
   pros::delay(600);
-  clamp.clamp_stake();
+  clamp.extend();
   intake.startColourSort();
   chassis->turnToPoint(34, -7, 900, {.maxSpeed = 70});
   chassis->waitUntilDone();
@@ -490,14 +502,14 @@ void Auton::swpBLUE() { //done test on practice field
   //cross to push bot off line and grab MOGO
   chassis->moveToPoint(-34, -37, 1600, {.maxSpeed = 100});
   chassis->waitUntil(19);
-  clamp.declamp_stake();
+  clamp.retract();
   intake.deactivate();
   pros::delay(700);
   chassis->moveToPoint(-24, -36, 1600, {.forwards = false, .maxSpeed = 100});
   chassis->turnToHeading(-180, 800);
   chassis->moveToPoint(-25, -20, 1000, {.forwards = false, .maxSpeed = 80});
   pros::delay(550);
-  clamp.clamp_stake();
+  clamp.extend();
   intake.startColourSort();
   chassis->turnToPoint(-44, -22, 500, {.maxSpeed = 110});
 

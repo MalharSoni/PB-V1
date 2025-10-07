@@ -13,6 +13,7 @@
 #include "lemlib/api.hpp"
 #include "robot/selector.hpp"
 #include "robot/distance_align.hpp"
+#include "lib/Pneumatic.hpp"  // Generic pneumatic component library
 
 // ============================================================================
 // PORT CONFIGURATION
@@ -154,9 +155,17 @@ extern pros::Motor leftArmMotor;
 // ----------------------------------------------------------------------------
 extern subsystems::Intake intake;
 extern subsystems::Arm arm;
-extern subsystems::Clamp clamp;
-extern subsystems::Doinker doinker;
 extern subsystems::Movement movement;
 extern subsystems::Selector selector;
 extern subsystems::DistanceAlign distanceAlign;
 extern subsystems::Auton auton;
+
+// ----------------------------------------------------------------------------
+// Generic Pneumatic Components (lib:: namespace)
+// Students: Rename these based on your game!
+// ----------------------------------------------------------------------------
+extern lib::Pneumatic clamp;    // High Stakes: mobile goal clamp
+extern lib::Pneumatic doinker;  // High Stakes: doinker mechanism
+// Next season examples:
+//   extern lib::Pneumatic wings;
+//   extern lib::Pneumatic blocker;
