@@ -6,10 +6,11 @@
 #include "pros/adi.hpp"
 #include "robot/movement.hpp"
 #include "robot/auton.hpp"
-#include "robot/intake.hpp"      // High Stakes specific (refactored)
-#include "robot/arm.hpp"         // High Stakes specific (refactored)
+#include "robot/intake_pushback.hpp"  // Push Back 3-stage intake
+// #include "robot/intake.hpp"      // Old High Stakes (archived)
+// #include "robot/arm.hpp"         // Old High Stakes (archived)
 #include "lemlib/api.hpp"
-#include "robot/selector.hpp"    // High Stakes specific
+// #include "robot/selector.hpp"    // Old High Stakes (archived - depends on old intake)
 #include "robot/distance_align.hpp"  // High Stakes specific
 #include "lib/Pneumatic.hpp"     // Generic pneumatic component library
 
@@ -42,11 +43,14 @@
 // ----------------------------------------------------------------------------
 // SUBSYSTEM MOTORS (V5 Smart Ports)
 // ----------------------------------------------------------------------------
-#define INTAKE_MOTOR_1 20       // Intake motor 1 (18:1 gearset)
-#define INTAKE_MOTOR_2 18       // Intake motor 2 (6:1 gearset)
-#define INTAKE_MOTOR_3 19       // Intake motor 3 (18:1 gearset)
-#define RIGHT_ARM_MOTOR 22      // TODO: CHANGE - conflicts with other devices!
-#define LEFT_ARM_MOTOR 22       // TODO: CHANGE - conflicts with other devices!
+// Push Back Intake - 3 Stage System
+#define INTAKE_STAGE_1 20       // Stage 1: 11W motor (main intake)
+#define INTAKE_STAGE_2 18       // Stage 2: 5.5W motor (transfer/routing)
+#define INTAKE_STAGE_3 19       // Stage 3: 5.5W motor (scoring)
+
+// Old High Stakes motors (archived - can be reused for new season)
+// #define RIGHT_ARM_MOTOR 22
+// #define LEFT_ARM_MOTOR 22
 
 // ----------------------------------------------------------------------------
 // SENSORS (V5 Smart Ports)
@@ -144,17 +148,22 @@ extern lemlib::Chassis chassis;
 // ----------------------------------------------------------------------------
 // Subsystem Motors
 // ----------------------------------------------------------------------------
-extern pros::Motor intakeMotor1;
-extern pros::Motor rightArmMotor;
-extern pros::Motor leftArmMotor;
+// Push Back intake motors
+extern pros::Motor intakeStage1;
+extern pros::Motor intakeStage2;
+extern pros::Motor intakeStage3;
+
+// Old High Stakes motors (archived)
+// extern pros::Motor rightArmMotor;
+// extern pros::Motor leftArmMotor;
 
 // ----------------------------------------------------------------------------
 // Subsystem Objects
 // ----------------------------------------------------------------------------
-extern subsystems::Intake intake;
-extern subsystems::Arm arm;
+extern subsystems::IntakePushback intake;  // Push Back 3-stage intake
+// extern subsystems::Arm arm;  // Old High Stakes (archived)
 extern subsystems::Movement movement;
-extern subsystems::Selector selector;
+// extern subsystems::Selector selector;  // Old High Stakes (archived)
 extern subsystems::DistanceAlign distanceAlign;
 extern subsystems::Auton auton;
 

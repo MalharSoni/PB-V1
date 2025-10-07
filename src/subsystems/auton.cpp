@@ -292,6 +292,15 @@ void Auton::go_backward(float distance, float time) {
   chassis->moveToPoint(newX, newY, time);
 }
 
+// ============================================================================
+// OLD HIGH STAKES AUTONOMOUS ROUTINES (ARCHIVED)
+// ============================================================================
+// These autonomous routines are specific to VEX High Stakes game.
+// They use the old intake (color sorting) and arm subsystems that have been
+// archived. Preserved here for reference when creating new Push Back autons.
+// ============================================================================
+
+/*
 void Auton::elimSAFEBLUE() {
     intake.set_target_color(DONUT_COLOR::BLUE);
   chassis->setPose(9, -46.1, -150);
@@ -457,7 +466,7 @@ void Auton::swpRED() { //done test on practice field
   // get final ring and touch
   intake.startColourSort();
   chassis->moveToPoint(48, -25, 1200, {.maxSpeed = 110});
-  chassis->moveToPoint(12, -8, 5000, {.forwards = false, .maxSpeed = 100});//*/
+  chassis->moveToPoint(12, -8, 5000, {.forwards = false, .maxSpeed = 100});
 }
 
 void Auton::swpBLUE() { //done test on practice field
@@ -519,6 +528,7 @@ void Auton::swpBLUE() { //done test on practice field
   // chassis->turnToPoint(0, -24, 500, {.maxSpeed = 110});
   // chassis->moveToPoint(0, -24, 10000, {.maxSpeed = 50});
 }
+*/
 
 void Auton::run_auton(AUTON_ROUTINE routine) {
   switch (routine) {

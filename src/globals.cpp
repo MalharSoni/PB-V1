@@ -150,26 +150,21 @@ lemlib::Chassis chassis(drivetrain, lateralPID, angularPID, sensors);
 // 6. SUBSYSTEMS (Game-Specific)
 // ============================================================================
 
-// Intake Subsystem (High Stakes: color sorting)
-pros::Motor intakeMotor1(INTAKE_MOTOR_1, pros::E_MOTOR_GEARSET_18);  // 18:1 gearset (red)
-pros::Motor intakeMotor2(INTAKE_MOTOR_2, pros::E_MOTOR_GEARSET_06);  // 6:1 gearset (blue)
-pros::Motor intakeMotor3(INTAKE_MOTOR_3, pros::E_MOTOR_GEARSET_18);  // 18:1 gearset (red)
-subsystems::Intake intake(
-    {intakeMotor1, intakeMotor2, intakeMotor3},     // Motor group
-    INTAKE_PISTON_PORT,                              // Pneumatic piston
-    INTAKE_COLOR_SENSOR_PORT,                        // Optical sensor for color sorting
-    INTAKE_LIMIT_PORT                                // Limit switch
-);
+// Push Back Intake Subsystem - 3 Stage System
+pros::Motor intakeStage1(INTAKE_STAGE_1, pros::E_MOTOR_GEARSET_18);  // 11W motor (or use 18:1)
+pros::Motor intakeStage2(INTAKE_STAGE_2, pros::E_MOTOR_GEARSET_06);  // 5.5W motor (6:1 gearset)
+pros::Motor intakeStage3(INTAKE_STAGE_3, pros::E_MOTOR_GEARSET_06);  // 5.5W motor (6:1 gearset)
+subsystems::IntakePushback intake({intakeStage1, intakeStage2, intakeStage3});
 
-// Arm Subsystem (High Stakes: wall stake scoring)
-pros::Motor rightArmMotor(RIGHT_ARM_MOTOR, pros::E_MOTOR_GEARSET_18);
-pros::Motor leftArmMotor(LEFT_ARM_MOTOR, pros::E_MOTOR_GEARSET_18);
-subsystems::Arm arm({leftArmMotor}, ARM_PISTON_PORT);
+// Old High Stakes Arm Subsystem (archived - no longer used)
+// pros::Motor rightArmMotor(RIGHT_ARM_MOTOR, pros::E_MOTOR_GEARSET_18);
+// pros::Motor leftArmMotor(LEFT_ARM_MOTOR, pros::E_MOTOR_GEARSET_18);
+// subsystems::Arm arm({leftArmMotor}, ARM_PISTON_PORT);
 
 // Movement & Autonomous Control
 subsystems::Movement movement(&chassis);
 subsystems::Auton auton(&chassis);
-subsystems::Selector selector(&intake, &auton);
+// subsystems::Selector selector(&intake, &auton);  // Old High Stakes (archived)
 subsystems::DistanceAlign distanceAlign(
     RIGHT_DISTANCE_PORT,    // Right distance sensor
     LEFT_DISTANCE_PORT,     // Left distance sensor

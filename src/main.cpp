@@ -24,10 +24,9 @@ void initialize() {
     rightMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
 
     // ========================================================================
-    // GAME-SPECIFIC INITIALIZATION (High Stakes)
+    // GAME-SPECIFIC INITIALIZATION (Push Back)
     // ========================================================================
-    // Set default alliance color for intake sorting
-    intake.set_target_color(DONUT_COLOR::RED);
+    // No game-specific initialization needed for Push Back intake
 }
 
 /**
@@ -40,11 +39,15 @@ void disabled() {}
  * Used for autonomous routine selection.
  */
 void competition_initialize() {
-    selector.init();
-    while (true) {
-        selector.update();
-        pros::delay(200);
-    }
+    // Old High Stakes selector (archived)
+    // selector.init();
+    // while (true) {
+    //     selector.update();
+    //     pros::delay(200);
+    // }
+
+    // For now, just show robot is ready
+    pros::lcd::print(0, "Push Back Robot Ready!");
 }
 
 /**
@@ -78,11 +81,15 @@ void opcontrol() {
         movement.arcade_drive(master.get_analog(ANALOG_LEFT_Y),
                              master.get_analog(ANALOG_RIGHT_X));
 
-        // Subsystem controls
-        clamp.run(DIGITAL_Y);                                           // Y button: clamp
-        intake.run(DIGITAL_R1, DIGITAL_L1, DIGITAL_UP, DIGITAL_LEFT);  // R1/L1: intake, Up/Left: other
-        arm.run(DIGITAL_DOWN, DIGITAL_B, DIGITAL_UP, DIGITAL_L2, DIGITAL_R2);  // Arm control
-        doinker.run(DIGITAL_RIGHT);                                     // Right button: doinker
+        // Push Back Intake - 4 Button Control
+        intake.run(DIGITAL_R1,   // R1: Intake from floor
+                   DIGITAL_R2,   // R2: Score Level 1 / Outtake
+                   DIGITAL_L1,   // L1: Score Level 2
+                   DIGITAL_L2);  // L2: Score Level 3
+
+        // Pneumatics (if still using clamp/doinker from High Stakes)
+        clamp.run(DIGITAL_Y);      // Y button: clamp
+        doinker.run(DIGITAL_RIGHT); // Right button: doinker
 
         // ====================================================================
         // WALL ALIGNMENT (Optional - for precision positioning)

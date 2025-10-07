@@ -1,6 +1,7 @@
 #include "robot/distance_align.hpp"
 #include "globals.hpp"
 #include "math.h"
+#include "pros/llemu.hpp"
 
 namespace subsystems {
     DistanceAlign::DistanceAlign(int rightPort, int leftPort, double sensorSeperation, double turnCenterDiff) : rightDistance(rightPort), leftDistance(leftPort) {
