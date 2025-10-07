@@ -1,4 +1,5 @@
 #pragma once
+#include "lib/MotorSubsystem.hpp"
 #include "pros/optical.hpp"
 #include "pros/motors.hpp"
 #include "pros/misc.hpp"
@@ -11,19 +12,43 @@ namespace subsystems {
 enum class DONUT_COLOR { NONE, RED, BLUE };
 
 
-class Intake {
+class Intake : public lib::MotorSubsystem {
 public:
     Intake(std::vector<pros::Motor> imotors, int ipiston, int top_color_sensor_port, int ilimit);
+
+    // ========================================================================
+    // MOTOR CONTROL (uses inherited MotorSubsystem methods)
+    // ========================================================================
+
     /**
-     * @brief
-     *
-     * @param speed (0-1) multiplier for speed
+     * @brief Move intake forward at specified speed
+     * @param speed (0-1) multiplier for speed, defaults to full speed
      */
     void move_forward(float speed = 1);
+
+    /**
+     * @brief Move intake backward at full speed
+     */
     void move_backward();
-    void move_relative(float position, float speed);
+
+    // Inherited from MotorSubsystem:
+    //   - moveRelative(float delta, float speed)
+    //   - stop()
+    //   - getPosition()
+    //   - setZeroPosition(float position = 0)
+    //   - getVelocity()
+
+    /**
+     * @brief Get motor velocity (wrapper for getVelocity())
+     * @return Velocity in RPM
+     */
+    int getMotorVelocity();
+
+    // ========================================================================
+    // GAME-SPECIFIC: HIGH STAKES COLOR SORTING
+    // ========================================================================
+
     void run(pros::controller_digital_e_t intakeButton, pros::controller_digital_e_t outtakeButton, pros::controller_digital_e_t pistonButton, pros::controller_digital_e_t killSwitch);
-    void stop();
     pros::ADIDigitalOut getIntakePist();
     pros::ADIDigitalIn getLimitSwitch();
     bool is_active() const;
@@ -32,10 +57,6 @@ public:
     void set_target_color(DONUT_COLOR color);
     DONUT_COLOR getTargetColour();
     int getSensorHue();
-    double getPosition();
-
-    void setPosition();
-    int getMotorVelocity();
     void startIntakeTask();
     void startColourSort();
     void endIntakeTask();
@@ -43,10 +64,12 @@ public:
     void piston_in();
 
 private:
-    pros::MotorGroup intake_motors;
+    // Game-specific hardware (High Stakes)
     pros::ADIDigitalOut intake_pist;
     pros::ADIDigitalIn limitSwitch;
-    pros::Optical top_color_sensor;  // Only keeping one color sensor
+    pros::Optical top_color_sensor;
+
+    // State tracking
     bool active = false;
     bool up = false;
     bool isIntakeTaskRunning = false;

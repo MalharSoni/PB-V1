@@ -43,7 +43,7 @@ namespace subsystems {
         if(!isArmUp){
             toggleArm();
         }
-        intake.move_relative(-60, 12000);
+        intake.moveRelative(-60, 12000);
 
 
         armMotor.move_absolute(armState::READY, 127);

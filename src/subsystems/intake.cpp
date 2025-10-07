@@ -8,20 +8,19 @@ namespace subsystems {
 
 Intake::Intake(std::vector<pros::Motor> imotors, int ipiston,
                int top_color_sensor_port, int ilimit)
-    : intake_motors(imotors), intake_pist(ipiston, true),
+    : lib::MotorSubsystem(imotors),  // Pass motors to base class
+      intake_pist(ipiston, true),
       top_color_sensor(top_color_sensor_port, 3),
-      target_color(DONUT_COLOR::NONE), limitSwitch(ilimit) {}
+      limitSwitch(ilimit),
+      target_color(DONUT_COLOR::NONE) {}
 
 void Intake::move_forward(float speed) {
-  intake_motors.move_voltage(12000 * speed);
-}
-void Intake::move_relative(float position, float speed) {
-  intake_motors.move_relative(position, speed);
+  move(12000 * speed);  // Use base class move()
 }
 
-void Intake::move_backward() { intake_motors.move_voltage(-12000); }
-
-void Intake::stop() { intake_motors.move_voltage(0); }
+void Intake::move_backward() {
+  move(-12000);  // Use base class move()
+}
 
 bool Intake::is_active() const { return active; }
 
@@ -45,17 +44,12 @@ DONUT_COLOR Intake::getTargetColour() { return target_color; }
 
 int Intake::getSensorHue() { return top_color_sensor.get_hue(); }
 
-double Intake::getPosition() { return intake_motors.get_positions().at(0); }
-
-void Intake::setPosition() { intake_motors.set_zero_position(0); }
-
 pros::ADIDigitalOut Intake::getIntakePist() { return intake_pist; }
 
 pros::ADIDigitalIn Intake::getLimitSwitch() { return limitSwitch; }
 
 int Intake::getMotorVelocity() {
-  return (int)intake_motors.get_actual_velocities()[0];
-  // return (int)intake_motors.get_voltages()[0];
+  return (int)getVelocity();  // Use base class getVelocity()
 }
 
 void Intake::startIntakeTask() {
@@ -233,7 +227,7 @@ void intakeFunction(void *iintake) {
         // intake->move_forward(-1);
         // pros::delay(15);
         // std::cout << "thing\n";
-        intake->move_relative(1, -5);
+        intake->moveRelative(1, -5);
       }
     }
   }
