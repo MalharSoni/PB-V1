@@ -2,56 +2,68 @@
 #include "pros/motors.h"
 
 // ============================================================================
-// GLOBAL VARIABLE INITIALIZATIONS
+// ROBOT HARDWARE CONFIGURATION
+// ============================================================================
+// This file contains all robot hardware object instantiations.
+// Organized by category for easy navigation and modification.
+//
+// STRUCTURE:
+// 1. State Variables (toggles, flags)
+// 2. Controller
+// 3. Drivetrain (motors, motor groups)
+// 4. Sensors (IMU, rotation sensors)
+// 5. LemLib Configuration (tracking wheels, drivetrain, PID, chassis)
+// 6. Subsystems (Intake, Arm, Movement, Auton, etc.)
+// 7. Generic Components (Pneumatics)
 // ============================================================================
 
+// ============================================================================
+// 1. STATE VARIABLES
+// ============================================================================
 // Toggle variables for driver control state tracking
 bool pistonToggle = false;
 bool intakeToggle = false;
 bool wallToggle = false;
 
 // ============================================================================
-// HARDWARE INITIALIZATION
+// 2. CONTROLLER
 // ============================================================================
-
-// ----------------------------------------------------------------------------
-// Controller
-// ----------------------------------------------------------------------------
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-// ----------------------------------------------------------------------------
-// Drivetrain Motors (Blue Gearset = 600 RPM)
-// ----------------------------------------------------------------------------
+// ============================================================================
+// 3. DRIVETRAIN
+// ============================================================================
+
+// Individual Motors (Blue Gearset = 600 RPM)
 pros::Motor leftFrontMotor(LEFT_MOTOR_FRONT, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor leftMidMotor(LEFT_MOTOR_MID, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor leftRearMotor(LEFT_MOTOR_REAR, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor rightFrontMotor(RIGHT_MOTOR_FRONT, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor rightMidMotor(RIGHT_MOTOR_MID, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor rightRearMotor(RIGHT_MOTOR_REAR, pros::E_MOTOR_GEAR_BLUE);
+
+// Motor Groups (for synchronized control)
 pros::MotorGroup leftMotors({leftFrontMotor, leftMidMotor, leftRearMotor});
 pros::MotorGroup rightMotors({rightFrontMotor, rightMidMotor, rightRearMotor});
 
-// ----------------------------------------------------------------------------
-// Sensors
-// ----------------------------------------------------------------------------
+// ============================================================================
+// 4. SENSORS
+// ============================================================================
 pros::Imu inertial(INERTIAL);
 pros::Rotation leftRotation(LEFT_ROTATION, true);     // Reversed
 pros::Rotation rearRotation(REAR_ROTATION, true);     // Reversed
 
 // ============================================================================
-// LEMLIB ODOMETRY & CHASSIS CONFIGURATION
+// 5. LEMLIB CONFIGURATION
 // ============================================================================
 
-// ----------------------------------------------------------------------------
-// Tracking Wheels (for odometry - currently defined but not used)
-// ----------------------------------------------------------------------------
-// TODO: Once tracking wheel ports are fixed in globals.hpp, enable these in sensors
+// Tracking Wheels (for odometry)
+// NOTE: Currently disabled due to port conflicts - using IMU-only tracking
+// TODO: Fix port conflicts in globals.hpp, then enable in OdomSensors below
 lemlib::TrackingWheel verticalTracking(&leftRotation, lemlib::Omniwheel::NEW_275, 0.0);
 lemlib::TrackingWheel horizontalTracking(&rearRotation, lemlib::Omniwheel::NEW_2, 3.25);
 
-// ----------------------------------------------------------------------------
 // Drivetrain Configuration
-// ----------------------------------------------------------------------------
 lemlib::Drivetrain drivetrain {
     &leftMotors,                    // Left motor group
     &rightMotors,                   // Right motor group
@@ -61,22 +73,22 @@ lemlib::Drivetrain drivetrain {
     2                               // Horizontal drift correction (degrees)
 };
 
-// ----------------------------------------------------------------------------
 // Odometry Sensors
 // WARNING: Currently using IMU-only tracking (all tracking wheels set to nullptr)
 // For better accuracy in competition:
 //   1. Fix port conflicts in globals.hpp
-//   2. Uncomment the tracking wheel parameters below
+//   2. Replace nullptr with &verticalTracking and &horizontalTracking
 //   3. Test and tune tracking wheel offsets
-// ----------------------------------------------------------------------------
 lemlib::OdomSensors sensors(
-    nullptr,        // Vertical tracking wheel 1 (left side) - TODO: use &verticalTracking
-    nullptr,        // Vertical tracking wheel 2 (right side) - set to nullptr if not used
+    nullptr,        // Vertical tracking wheel 1 (left) - TODO: use &verticalTracking
+    nullptr,        // Vertical tracking wheel 2 (right) - not used
     nullptr,        // Horizontal tracking wheel 1 (rear) - TODO: use &horizontalTracking
-    nullptr,        // Horizontal tracking wheel 2 - set to nullptr if not used
-    &inertial       // IMU sensor (always required)
+    nullptr,        // Horizontal tracking wheel 2 - not used
+    &inertial       // IMU sensor (required)
 );
 
+// ============================================================================
+// PID CONTROLLERS
 // ============================================================================
 // PID TUNING GUIDE FOR STUDENTS
 // ============================================================================
@@ -105,9 +117,7 @@ lemlib::OdomSensors sensors(
 //   4. Only add kI if needed for steady-state error
 // ============================================================================
 
-// ----------------------------------------------------------------------------
 // Lateral PID (Forward/Backward Movement)
-// ----------------------------------------------------------------------------
 lemlib::ControllerSettings lateralPID(
     10,     // kP - Proportional gain (aggression)
     0,      // kI - Integral gain (steady-state correction)
@@ -120,9 +130,7 @@ lemlib::ControllerSettings lateralPID(
     20      // Maximum acceleration/slew rate
 );
 
-// ----------------------------------------------------------------------------
 // Angular PID (Turning)
-// ----------------------------------------------------------------------------
 lemlib::ControllerSettings angularPID(
     2.2,    // kP - Proportional gain (turn aggression)
     0,      // kI - Integral gain (usually 0 for turning)
@@ -135,18 +143,14 @@ lemlib::ControllerSettings angularPID(
     0       // Maximum acceleration/slew (0 = no slew on turns)
 );
 
-// ----------------------------------------------------------------------------
-// Chassis Object (combines all drivetrain, PID, and sensors)
-// ----------------------------------------------------------------------------
+// Chassis Object (combines drivetrain, PID, and sensors)
 lemlib::Chassis chassis(drivetrain, lateralPID, angularPID, sensors);
 
 // ============================================================================
-// SUBSYSTEM INITIALIZATION
+// 6. SUBSYSTEMS (Game-Specific)
 // ============================================================================
 
-// ----------------------------------------------------------------------------
-// Intake Subsystem
-// ----------------------------------------------------------------------------
+// Intake Subsystem (High Stakes: color sorting)
 pros::Motor intakeMotor1(INTAKE_MOTOR_1, pros::E_MOTOR_GEARSET_18);  // 18:1 gearset (red)
 pros::Motor intakeMotor2(INTAKE_MOTOR_2, pros::E_MOTOR_GEARSET_06);  // 6:1 gearset (blue)
 pros::Motor intakeMotor3(INTAKE_MOTOR_3, pros::E_MOTOR_GEARSET_18);  // 18:1 gearset (red)
@@ -157,16 +161,12 @@ subsystems::Intake intake(
     INTAKE_LIMIT_PORT                                // Limit switch
 );
 
-// ----------------------------------------------------------------------------
-// Arm Subsystem
-// ----------------------------------------------------------------------------
+// Arm Subsystem (High Stakes: wall stake scoring)
 pros::Motor rightArmMotor(RIGHT_ARM_MOTOR, pros::E_MOTOR_GEARSET_18);
 pros::Motor leftArmMotor(LEFT_ARM_MOTOR, pros::E_MOTOR_GEARSET_18);
 subsystems::Arm arm({leftArmMotor}, ARM_PISTON_PORT);
 
-// ----------------------------------------------------------------------------
-// Other Subsystems
-// ----------------------------------------------------------------------------
+// Movement & Autonomous Control
 subsystems::Movement movement(&chassis);
 subsystems::Auton auton(&chassis);
 subsystems::Selector selector(&intake, &auton);
@@ -178,12 +178,13 @@ subsystems::DistanceAlign distanceAlign(
 );
 
 // ============================================================================
-// GENERIC PNEUMATIC COMPONENTS (Game-Agnostic)
+// 7. GENERIC COMPONENTS (Game-Agnostic)
 // ============================================================================
-// These use the universal lib::Pneumatic class.
-// STUDENTS: For new games, just rename these variables to match your mechanisms!
+// These use universal lib:: classes and can be renamed for any game.
 //
-// High Stakes examples:
+// STUDENTS: For new seasons, just rename these variables to match your game!
+//
+// High Stakes (current):
 lib::Pneumatic clamp(CLAMP_PORT);      // Mobile goal clamp
 lib::Pneumatic doinker(DOINKER_PORT);  // Doinker mechanism
 //
