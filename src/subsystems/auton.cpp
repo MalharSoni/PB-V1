@@ -2,9 +2,6 @@
 #include "globals.hpp"
 #include "lemlib/chassis/chassis.hpp"
 #include "pros/rtos.hpp"
-#include "robot/arm.hpp"
-#include "robot/clamp.hpp"
-#include "robot/intake.hpp"
 
 /*
 ╔══════════════════════════════════════════════════════════════════════════════╗

@@ -6,14 +6,12 @@
 #include "pros/adi.hpp"
 #include "robot/movement.hpp"
 #include "robot/auton.hpp"
-#include "robot/clamp.hpp"
-#include "robot/intake.hpp"
-#include "robot/arm.hpp"
-#include "robot/doinker.hpp"
+#include "robot/intake.hpp"      // High Stakes specific (refactored)
+#include "robot/arm.hpp"         // High Stakes specific (refactored)
 #include "lemlib/api.hpp"
-#include "robot/selector.hpp"
-#include "robot/distance_align.hpp"
-#include "lib/Pneumatic.hpp"  // Generic pneumatic component library
+#include "robot/selector.hpp"    // High Stakes specific
+#include "robot/distance_align.hpp"  // High Stakes specific
+#include "lib/Pneumatic.hpp"     // Generic pneumatic component library
 
 // ============================================================================
 // PORT CONFIGURATION
