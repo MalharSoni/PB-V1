@@ -5,21 +5,18 @@
 
 
 namespace subsystems {
-    Arm::Arm(std::vector<pros::Motor> imotors, int ipiston) : armMotor(imotors), armPist(ipiston, false) {}
+    Arm::Arm(std::vector<pros::Motor> imotors, int ipiston)
+        : lib::MotorSubsystem(imotors),  // Pass motors to base class
+          armPist(ipiston, false) {}
 
     void Arm::goToPickup () {
         if(isArmUp){
             toggleArm();
         }
 
-        armMotor.move_absolute(armState::PICKUP, 127);
+        moveAbsolute(armState::PICKUP, 127);  // Use base class method
         isPickup = true;
         currentArmState = armState::PICKUP;
-    }
-
-    void Arm::getPosition() {
-        pros::lcd::print(6, "%.2f", leftArmMotor.get_position());
-
     }
 
     void Arm::goToIdle () {
@@ -27,7 +24,7 @@ namespace subsystems {
             toggleArm();
         }
 
-        armMotor.move_absolute(armState::IDLE, 127);
+        moveAbsolute(armState::IDLE, 127);  // Use base class method
         isPickup = false;
         currentArmState = armState::IDLE;
     }
@@ -45,8 +42,7 @@ namespace subsystems {
         }
         intake.moveRelative(-60, 12000);
 
-
-        armMotor.move_absolute(armState::READY, 127);
+        moveAbsolute(armState::READY, 127);  // Use base class method
         isPickup = false;
         currentArmState = armState::READY;
     }
@@ -56,13 +52,13 @@ namespace subsystems {
             toggleArm();
         }
 
-        armMotor.move_absolute(armState::ALLIANCE_STAKE_READY, 127);
+        moveAbsolute(armState::ALLIANCE_STAKE_READY, 127);  // Use base class method
         isPickup = false;
         currentArmState = armState::ALLIANCE_STAKE_READY;
     }
 
     void Arm::score () {
-        armMotor.move_relative(SCORE_MOVE, 127);
+        moveRelative(SCORE_MOVE, 127);  // Use base class method
         isPickup = false;
     }
 
@@ -72,22 +68,22 @@ namespace subsystems {
             isPickup = false;
         }
 
-        armMotor.move_absolute(armState::ALLIANCE_STAKE, 127);
+        moveAbsolute(armState::ALLIANCE_STAKE, 127);  // Use base class method
         isPickup = false;
         currentArmState = armState::ALLIANCE_STAKE;
     }
 
     void Arm::setArmMotorVoltage(int voltage){
-        armMotor.move_voltage(voltage);
+        move(voltage);  // Use base class method
     }
 
     void Arm::testControl(pros::controller_digital_e_t upButton, pros::controller_digital_e_t downButton, pros::controller_digital_e_t pistonButton) {
         if(master.get_digital(upButton)) {
-            armMotor.move_voltage(-12000);
+            move(-12000);  // Use base class method
         } else if(master.get_digital(downButton)) {
-            armMotor.move_voltage(12000);
+            move(12000);  // Use base class method
         } else {
-            armMotor.move_voltage(0);
+            move(0);  // Use base class method
         }
 
         if(master.get_digital_new_press(pistonButton)){
@@ -113,13 +109,13 @@ namespace subsystems {
         }
 
         if(master.get_digital(upButton)){
-            armMotor.move_voltage(-12000);
+            move(-12000);  // Use base class method
             isMotorMoving = true;
         } else if(master.get_digital(downButton)){
-            armMotor.move_voltage(12000);
+            move(12000);  // Use base class method
             isMotorMoving = true;
         } else if(isMotorMoving){
-            armMotor.move_voltage(0);
+            move(0);  // Use base class method
             isMotorMoving = false;
         }
     }
