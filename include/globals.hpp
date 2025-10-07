@@ -17,18 +17,19 @@
 // ============================================================================
 // PORT CONFIGURATION
 // ============================================================================
-
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: FIX THESE PORT CONFLICTS BEFORE COMPETITION!
-// The following devices all use port 22 and need unique ports assigned:
-//   - LEFT_ROTATION (odometry tracking wheel)
-//   - REAR_ROTATION (odometry tracking wheel)
-//   - RIGHT_ARM_MOTOR
-//   - LEFT_ARM_MOTOR
-//   - INTAKE_COLOR_SENSOR_PORT (optical sensor)
-//   - RIGHT_DISTANCE_PORT
-//   - LEFT_DISTANCE_PORT
-// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// All port conflicts have been resolved. Current port assignments:
+//
+// MOTORS (V5 Smart Ports):
+//   Drivetrain: 11, 12, 13, 14, 15, 16
+//   Intake: 18, 19, 20
+//
+// SENSORS (V5 Smart Ports):
+//   IMU: 10
+//   Tracking wheels: 1, 2
+//   Distance sensors: 3, 4
+//
+// PNEUMATICS (ADI Ports): C, H, B, D, F
+// ============================================================================
 
 // ----------------------------------------------------------------------------
 // DRIVETRAIN MOTORS (V5 Smart Ports)
@@ -45,8 +46,8 @@
 // ----------------------------------------------------------------------------
 // Push Back Intake - 3 Stage System
 #define INTAKE_STAGE_1 20       // Stage 1: 11W motor (main intake)
-#define INTAKE_STAGE_2 18       // Stage 2: 5.5W motor (transfer/routing)
-#define INTAKE_STAGE_3 19       // Stage 3: 5.5W motor (scoring)
+#define INTAKE_STAGE_2 19       // Stage 2: 5.5W motor (transfer/routing)
+#define INTAKE_STAGE_3 18       // Stage 3: 5.5W motor (scoring)
 
 // Old High Stakes motors (archived - can be reused for new season)
 // #define RIGHT_ARM_MOTOR 22
@@ -56,11 +57,11 @@
 // SENSORS (V5 Smart Ports)
 // ----------------------------------------------------------------------------
 #define INERTIAL 10                     // IMU sensor for heading/rotation
-#define LEFT_ROTATION 22                // TODO: CHANGE - Left tracking wheel (odometry)
-#define REAR_ROTATION 22                // TODO: CHANGE - Rear tracking wheel (odometry)
-#define INTAKE_COLOR_SENSOR_PORT 22     // TODO: CHANGE - Optical sensor for ring sorting
-#define RIGHT_DISTANCE_PORT 22          // TODO: CHANGE - Distance sensor (wall align)
-#define LEFT_DISTANCE_PORT 22           // TODO: CHANGE - Distance sensor (wall align)
+#define LEFT_ROTATION 1                 // Left tracking wheel (odometry)
+#define REAR_ROTATION 2                 // Rear tracking wheel (odometry)
+// #define INTAKE_COLOR_SENSOR_PORT 5   // Old High Stakes - Optical sensor (archived)
+#define RIGHT_DISTANCE_PORT 3           // Right distance sensor (wall align)
+#define LEFT_DISTANCE_PORT 4            // Left distance sensor (wall align)
 
 // ----------------------------------------------------------------------------
 // PNEUMATICS (ADI Ports A-H)
@@ -104,6 +105,7 @@ namespace subsystems {
     class Movement;
     class Selector;
     class Auton;
+    class BrainUI;
 }
 
 // ============================================================================
@@ -166,6 +168,7 @@ extern subsystems::Movement movement;
 // extern subsystems::Selector selector;  // Old High Stakes (archived)
 extern subsystems::DistanceAlign distanceAlign;
 extern subsystems::Auton auton;
+extern subsystems::BrainUI brainUI;  // LVGL-based brain screen UI
 
 // ----------------------------------------------------------------------------
 // Generic Pneumatic Components (lib:: namespace)

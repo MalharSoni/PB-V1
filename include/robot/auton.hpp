@@ -14,6 +14,26 @@ public:
     void set_selected_auton(AUTON_ROUTINE routine);
     void go_forward(float distance, float time, float spd);
     void go_backward(float distance, float time);
+
+    // ========================================================================
+    // PUSH BACK AUTONOMOUS ROUTINES
+    // ========================================================================
+
+    /**
+     * @brief Simple Push Back autonomous - Intake and score
+     *
+     * Routine:
+     * 1. Start intake
+     * 2. Move to collect balls
+     * 3. Move to scoring position
+     * 4. Score balls
+     */
+    void pushBackSimple();
+
+    // ========================================================================
+    // OLD HIGH STAKES AUTONOMOUS ROUTINES (Archived)
+    // ========================================================================
+
     /**
      * @brief use with brandon to place in corner and sit
      *

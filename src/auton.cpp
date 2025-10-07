@@ -293,6 +293,44 @@ void Auton::go_backward(float distance, float time) {
 }
 
 // ============================================================================
+// PUSH BACK AUTONOMOUS ROUTINES
+// ============================================================================
+
+void Auton::pushBackSimple() {
+    // Simple autonomous: Intake balls and score
+
+    // 1. Set starting position (x, y, heading in degrees)
+    // Example: Starting at (-12, -60, 0) - back left of field, facing forward
+    chassis->setPose(0.75, -49.25, 0);
+
+    // 2. Start intake to store balls
+    intake.store();
+
+    // 3. Move to first point to collect balls (x, y, timeout_ms)
+    chassis->moveToPoint(23, -25, 2000);  
+    chassis->waitUntilDone();  // Wait until completely stopped
+    pros::delay(500);  // pause
+
+    // 4. Move to second point while still intaking
+    chassis->moveToPoint(43, -8, 2000);  // Move to center area
+    chassis->waitUntilDone();  // Wait until completely stopped
+    pros::delay(500);  // pause
+
+    // 5. Stop intake
+    intake.stopAll();
+    pros::delay(200);  // Brief pause
+
+    // 6. Score balls at level 2
+    chassis->moveToPoint(12, -12, 1500, {.forwards = false, .maxSpeed = 60});
+    chassis->turnToPoint(62, -72, 1500, {.maxSpeed = 70}, false);
+    intake.scoreLevel2();
+    pros::delay(1000);  // Run outtake for 1 second
+
+    // 7. Stop scoring
+    intake.stopAll();
+}
+
+// ============================================================================
 // OLD HIGH STAKES AUTONOMOUS ROUTINES (ARCHIVED)
 // ============================================================================
 // These autonomous routines are specific to VEX High Stakes game.

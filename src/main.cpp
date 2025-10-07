@@ -1,6 +1,7 @@
 #include "main.h"
 #include "globals.hpp"
 #include "robot_config.hpp"
+#include "robot/brain_ui.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
 
@@ -11,10 +12,16 @@ using namespace subsystems;
  * Used for sensor calibration and initial configuration.
  */
 void initialize() {
+    // Initialize PROS LCD (simple text display)
     pros::lcd::initialize();
 
     // Initialize all robot hardware (IMU, chassis, subsystems, etc.)
     robot_config::initialize();
+
+    // TEMPORARY: Disable LVGL UI to fix crash
+    // TODO: Debug LVGL initialization issue
+    // brainUI.init();
+    // brainUI.showSplash();
 
     // Set initial robot pose (starting position on field)
     chassis.setPose(0, 0, 0);
@@ -39,15 +46,21 @@ void disabled() {}
  * Used for autonomous routine selection.
  */
 void competition_initialize() {
+    // TEMPORARY: Disable LVGL UI to fix crash
+    pros::lcd::print(0, "Robot Ready - Team 839Y");
+
+    // TODO: Re-enable after fixing LVGL crash
+    // brainUI.showAutonSelector();
+
+    // Wait for user to confirm selection
+    // (UI runs on LVGL task loop, no blocking needed)
+
     // Old High Stakes selector (archived)
     // selector.init();
     // while (true) {
     //     selector.update();
     //     pros::delay(200);
     // }
-
-    // For now, just show robot is ready
-    pros::lcd::print(0, "Push Back Robot Ready!");
 }
 
 /**
@@ -55,7 +68,13 @@ void competition_initialize() {
  * STUDENTS: Uncomment the autonomous routine you want to run.
  */
 void autonomous() {
-    // Uncomment ONE of these routines:
+    // Run selected autonomous routine from UI
+    // auton.run_auton(brainUI.getSelectedAuton());
+
+    // For now, run default routine
+    auton.pushBackSimple();  // Simple intake and score routine
+
+    // Old High Stakes routines (archived):
     // auton.elimSAFERED();
     // auton.elimSAFEBLUE();
     // auton.swpRED();
@@ -71,6 +90,10 @@ void opcontrol() {
     // Set brake modes for driver control
     leftMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
     rightMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
+
+    // TEMPORARY: Disable LVGL UI to fix crash
+    // TODO: Re-enable after fixing LVGL crash
+    // brainUI.showOperationScreen();
 
     while (true) {
         // ====================================================================
@@ -106,13 +129,11 @@ void opcontrol() {
         }
 
         // ====================================================================
-        // DEBUG OUTPUT
+        // UI UPDATES
         // ====================================================================
 
-        // Brain LCD display (rows 1-3)
-        pros::lcd::print(1, "x: %Lf", chassis.getPose().x);
-        pros::lcd::print(2, "y: %Lf", chassis.getPose().y);
-        pros::lcd::print(3, "theta: %Lf", chassis.getPose().theta);
+        // TEMPORARY: Disable LVGL UI to fix crash
+        // brainUI.updateTelemetry();
 
         // Controller screen display
         master.print(0, 0, "x:%5.3Lf y:%5.3Lf", chassis.getPose().x, chassis.getPose().y);

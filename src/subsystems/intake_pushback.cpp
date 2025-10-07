@@ -18,7 +18,13 @@ IntakePushback::IntakePushback(std::vector<pros::Motor> motors)
     stage2_motor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     stage3_motor.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 }
-
+// ============================================================================
+// INTAKE BUTTONS
+// ============================================================================
+        //            DIGITAL_R1,   // R1: Intake from floor and store
+        //            DIGITAL_R2,   // R2: Score Level 1 / Outtake
+        //            DIGITAL_L1,   // L1: Score Level 2
+        //            DIGITAL_L2);  // L2: Score Level 3
 // ============================================================================
 // MODE 1: INTAKE
 // ============================================================================
@@ -27,7 +33,7 @@ void IntakePushback::intake() {
     // Pull balls in from floor
     // NOTE: Tune these speeds during testing!
     stage1_motor.move_voltage(12000);   // Full forward (main intake)
-    stage2_motor.move_voltage(6000);    // Half forward (transfer)
+    stage2_motor.move_voltage(12000);    // Half forward (transfer)
     stage3_motor.move_voltage(0);       // Off
 }
 
@@ -39,7 +45,7 @@ void IntakePushback::scoreLevel1() {
     // Reverse to outtake or score low
     // NOTE: Tune these speeds during testing!
     stage1_motor.move_voltage(-12000);  // Full reverse (outtake)
-    stage2_motor.move_voltage(-6000);   // Half reverse (assist)
+    stage2_motor.move_voltage(-12000);   // Half reverse (assist)
     stage3_motor.move_voltage(0);       // Off
 }
 
@@ -50,8 +56,8 @@ void IntakePushback::scoreLevel1() {
 void IntakePushback::store() {
     // Hold balls internally between intake and scoring
     // NOTE: Tune these speeds during testing!
-    stage1_motor.move_voltage(0);       // Off
-    stage2_motor.move_voltage(3000);    // Slow hold (prevent dropping)
+    stage1_motor.move_voltage(12000);       // Off
+    stage2_motor.move_voltage(-6000);    // Slow hold (prevent dropping)
     stage3_motor.move_voltage(0);       // Off
 }
 
@@ -64,7 +70,7 @@ void IntakePushback::scoreLevel2() {
     // NOTE: Tune these speeds during testing!
     stage1_motor.move_voltage(0);       // Off
     stage2_motor.move_voltage(12000);   // Full forward (routing)
-    stage3_motor.move_voltage(9000);    // 3/4 forward (scoring)
+    stage3_motor.move_voltage(12000);    // 3/4 forward (scoring)
 }
 
 // ============================================================================
@@ -76,7 +82,7 @@ void IntakePushback::scoreLevel3() {
     // NOTE: Tune these speeds during testing!
     stage1_motor.move_voltage(0);       // Off
     stage2_motor.move_voltage(12000);   // Full forward (routing)
-    stage3_motor.move_voltage(12000);   // Full forward (high scoring)
+    stage3_motor.move_voltage(-12000);   // Full forward (high scoring)
 }
 
 // ============================================================================
@@ -100,7 +106,7 @@ void IntakePushback::run(pros::controller_digital_e_t intakeBtn,
                          pros::controller_digital_e_t scoreL3Btn) {
     // 4-button control: priority order
     if (master.get_digital(intakeBtn)) {
-        intake();           // Intake from floor
+        store();           // Intake from floor
     }
     else if (master.get_digital(scoreL1Btn)) {
         scoreLevel1();      // Outtake / score low

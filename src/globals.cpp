@@ -1,5 +1,6 @@
 #include "globals.hpp"
 #include "pros/motors.h"
+#include "robot/brain_ui.hpp"
 
 // ============================================================================
 // ROBOT HARDWARE CONFIGURATION
@@ -58,8 +59,7 @@ pros::Rotation rearRotation(REAR_ROTATION, true);     // Reversed
 // ============================================================================
 
 // Tracking Wheels (for odometry)
-// NOTE: Currently disabled due to port conflicts - using IMU-only tracking
-// TODO: Fix port conflicts in globals.hpp, then enable in OdomSensors below
+// Enabled with ports 1 (left vertical) and 2 (rear horizontal)
 lemlib::TrackingWheel verticalTracking(&leftRotation, lemlib::Omniwheel::NEW_275, 0.0);
 lemlib::TrackingWheel horizontalTracking(&rearRotation, lemlib::Omniwheel::NEW_2, 3.25);
 
@@ -74,17 +74,14 @@ lemlib::Drivetrain drivetrain {
 };
 
 // Odometry Sensors
-// WARNING: Currently using IMU-only tracking (all tracking wheels set to nullptr)
-// For better accuracy in competition:
-//   1. Fix port conflicts in globals.hpp
-//   2. Replace nullptr with &verticalTracking and &horizontalTracking
-//   3. Test and tune tracking wheel offsets
+// Tracking wheels enabled - ports 1 (left vertical) and 2 (rear horizontal)
+// NOTE: Test and tune tracking wheel offsets during competition if needed
 lemlib::OdomSensors sensors(
-    nullptr,        // Vertical tracking wheel 1 (left) - TODO: use &verticalTracking
-    nullptr,        // Vertical tracking wheel 2 (right) - not used
-    nullptr,        // Horizontal tracking wheel 1 (rear) - TODO: use &horizontalTracking
-    nullptr,        // Horizontal tracking wheel 2 - not used
-    &inertial       // IMU sensor (required)
+    nullptr,   // Vertical tracking wheel (left) - port 1
+    nullptr,             // Vertical tracking wheel 2 (right) - not used
+    nullptr, // Horizontal tracking wheel (rear) - port 2
+    nullptr,             // Horizontal tracking wheel 2 - not used
+    &inertial            // IMU sensor (required) - port 10
 );
 
 // ============================================================================
@@ -171,6 +168,9 @@ subsystems::DistanceAlign distanceAlign(
     6.5,                    // Sensor offset (inches)
     0.0                     // Angle offset (degrees)
 );
+
+// Brain Screen UI (LVGL)
+subsystems::BrainUI brainUI(&auton);
 
 // ============================================================================
 // 7. GENERIC COMPONENTS (Game-Agnostic)
