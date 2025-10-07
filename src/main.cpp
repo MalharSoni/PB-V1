@@ -15,13 +15,18 @@ void initialize() {
     // Initialize PROS LCD (simple text display)
     pros::lcd::initialize();
 
+    // Display team info on brain screen
+    pros::lcd::set_text(0, "=============================");
+    pros::lcd::set_text(1, "");
+    pros::lcd::set_text(2, "   /// CAUTION TAPE ///");
+    pros::lcd::set_text(3, "   /// ROBOTICS CLUB ///");
+    pros::lcd::set_text(4, "");
+    pros::lcd::set_text(5, "      TEAM 839Y");
+    pros::lcd::set_text(6, "");
+    pros::lcd::set_text(7, "=============================");
+
     // Initialize all robot hardware (IMU, chassis, subsystems, etc.)
     robot_config::initialize();
-
-    // TEMPORARY: Disable LVGL UI to fix crash
-    // TODO: Debug LVGL initialization issue
-    // brainUI.init();
-    // brainUI.showSplash();
 
     // Set initial robot pose (starting position on field)
     chassis.setPose(0, 0, 0);
@@ -46,14 +51,16 @@ void disabled() {}
  * Used for autonomous routine selection.
  */
 void competition_initialize() {
-    // TEMPORARY: Disable LVGL UI to fix crash
-    pros::lcd::print(0, "Robot Ready - Team 839Y");
-
-    // TODO: Re-enable after fixing LVGL crash
-    // brainUI.showAutonSelector();
-
-    // Wait for user to confirm selection
-    // (UI runs on LVGL task loop, no blocking needed)
+    // Display competition ready message
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "=============================");
+    pros::lcd::set_text(1, "");
+    pros::lcd::set_text(2, "    COMPETITION MODE");
+    pros::lcd::set_text(3, "");
+    pros::lcd::set_text(4, "   /// TEAM 839Y ///");
+    pros::lcd::set_text(5, "");
+    pros::lcd::set_text(6, "      READY!");
+    pros::lcd::set_text(7, "=============================");
 
     // Old High Stakes selector (archived)
     // selector.init();
