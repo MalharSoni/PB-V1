@@ -1,5 +1,6 @@
 #include "main.h"
 #include "globals.hpp"
+#include "robot_config.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
 
@@ -12,14 +13,19 @@ using namespace subsystems;
 void initialize() {
     pros::lcd::initialize();
 
-    // Calibrate IMU (IMPORTANT: Robot must be still during calibration!)
-    chassis.calibrate();
+    // Initialize all robot hardware (IMU, chassis, subsystems, etc.)
+    robot_config::initialize();
+
+    // Set initial robot pose (starting position on field)
     chassis.setPose(0, 0, 0);
 
     // Set drivetrain brake modes
     leftMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
     rightMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
 
+    // ========================================================================
+    // GAME-SPECIFIC INITIALIZATION (High Stakes)
+    // ========================================================================
     // Set default alliance color for intake sorting
     intake.set_target_color(DONUT_COLOR::RED);
 }
