@@ -12,7 +12,9 @@
 #include "lemlib/api.hpp"
 // #include "robot/selector.hpp"    // Old High Stakes (archived - depends on old intake)
 #include "robot/distance_align.hpp"  // High Stakes specific
-#include "lib/Pneumatic.hpp"     // Generic pneumatic component library
+#include "robot/telemetry.hpp"       // Telemetry logging system
+#include "robot/alerts.hpp"          // Real-time alert system
+#include "lib/Pneumatic.hpp"         // Generic pneumatic component library
 
 // ============================================================================
 // PORT CONFIGURATION
@@ -170,6 +172,12 @@ extern subsystems::Movement movement;
 extern subsystems::DistanceAlign distanceAlign;
 extern subsystems::Auton auton;
 extern subsystems::BrainUI brainUI;  // LVGL-based brain screen UI
+
+// ----------------------------------------------------------------------------
+// Reliability & Diagnostics Subsystems
+// ----------------------------------------------------------------------------
+extern subsystems::Telemetry telemetry;  // CSV logging to SD card
+extern subsystems::Alerts alerts;        // Real-time controller alerts
 
 // ----------------------------------------------------------------------------
 // Generic Pneumatic Components (lib:: namespace)

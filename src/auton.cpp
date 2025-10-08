@@ -349,6 +349,15 @@ void Auton::odomDriveTest() {
     chassis->setPose(0, 0, 0);
     pros::delay(1000);
 
+    // Log telemetry during test (if telemetry is running)
+    uint32_t last_log = pros::millis();
+    auto log_periodic = [&]() {
+        if (pros::millis() - last_log > 50) {  // Log every 50ms
+            telemetry.log();
+            last_log = pros::millis();
+        }
+    };
+
     // ========================================================================
     // PHASE 1: Drive forward 48 inches
     // ========================================================================
@@ -356,6 +365,10 @@ void Auton::odomDriveTest() {
     pros::lcd::print(3, "Phase 1: Forward 48\"");
 
     chassis->moveToPoint(0, 48, 5000, {.forwards = true, .maxSpeed = 60, .minSpeed = 20});
+    while (!chassis->isInMotion() == false) {  // While moving
+        log_periodic();
+        pros::delay(10);
+    }
     chassis->waitUntilDone();
     pros::delay(250);
 

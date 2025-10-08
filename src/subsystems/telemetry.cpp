@@ -1,0 +1,99 @@
+#include "robot/telemetry.hpp"
+#include "globals.hpp"
+#include "pros/misc.h"
+#include <ctime>
+
+namespace subsystems {
+
+Telemetry::Telemetry() : logfile(nullptr), logging(false), startTime(0) {}
+
+void Telemetry::init() {
+    // Generate filename with timestamp
+    time_t now = time(nullptr);
+    struct tm* timeinfo = localtime(&now);
+    char filename[64];
+    snprintf(filename, sizeof(filename), "/usd/telemetry_%02d%02d_%02d%02d%02d.csv",
+             timeinfo->tm_mon + 1, timeinfo->tm_mday,
+             timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
+
+    // Open file for writing
+    logfile = fopen(filename, "w");
+
+    if (logfile == nullptr) {
+        // Fallback to simple filename if timestamp fails
+        logfile = fopen("/usd/telemetry.csv", "w");
+    }
+
+    if (logfile != nullptr) {
+        // Write CSV header
+        fprintf(logfile, "time_ms,x,y,theta,");
+        fprintf(logfile, "lf_temp,lm_temp,rf_temp,rm_temp,");
+        fprintf(logfile, "lf_curr,lm_curr,rf_curr,rm_curr,");
+        fprintf(logfile, "battery_mv,velocity\n");
+
+        logging = true;
+        startTime = pros::millis();
+
+        // Console confirmation
+        printf("[Telemetry] Logging to %s\n", filename);
+    } else {
+        printf("[Telemetry] ERROR: Failed to open log file\n");
+        logging = false;
+    }
+}
+
+void Telemetry::log() {
+    if (!logging || logfile == nullptr) return;
+
+    // Get current pose
+    lemlib::Pose pose = chassis.getPose();
+
+    // Get motor temperatures (Celsius)
+    float lf_temp = leftFrontMotor.get_temperature();
+    float lm_temp = leftMidMotor.get_temperature();
+    float rf_temp = rightFrontMotor.get_temperature();
+    float rm_temp = rightMidMotor.get_temperature();
+
+    // Get motor currents (milliamps)
+    float lf_curr = leftFrontMotor.get_current_draw();
+    float lm_curr = leftMidMotor.get_current_draw();
+    float rf_curr = rightFrontMotor.get_current_draw();
+    float rm_curr = rightMidMotor.get_current_draw();
+
+    // Get battery voltage (millivolts)
+    int32_t battery = pros::battery::get_voltage();
+
+    // Calculate average velocity (RPM average of all motors)
+    float lf_vel = leftFrontMotor.get_actual_velocity();
+    float lm_vel = leftMidMotor.get_actual_velocity();
+    float rf_vel = rightFrontMotor.get_actual_velocity();
+    float rm_vel = rightMidMotor.get_actual_velocity();
+    float avg_velocity = (abs(lf_vel) + abs(lm_vel) + abs(rf_vel) + abs(rm_vel)) / 4.0;
+
+    // Get elapsed time
+    uint32_t elapsed = pros::millis() - startTime;
+
+    // Write data to CSV
+    fprintf(logfile, "%u,%.2f,%.2f,%.2f,",
+            elapsed, pose.x, pose.y, pose.theta);
+    fprintf(logfile, "%.1f,%.1f,%.1f,%.1f,",
+            lf_temp, lm_temp, rf_temp, rm_temp);
+    fprintf(logfile, "%.0f,%.0f,%.0f,%.0f,",
+            lf_curr, lm_curr, rf_curr, rm_curr);
+    fprintf(logfile, "%d,%.1f\n",
+            battery, avg_velocity);
+
+    // Flush to ensure data is written (important for crashes)
+    fflush(logfile);
+}
+
+void Telemetry::close() {
+    if (logfile != nullptr) {
+        fclose(logfile);
+        logfile = nullptr;
+        logging = false;
+        printf("[Telemetry] Log file closed\n");
+    }
+}
+
+} // namespace subsystems

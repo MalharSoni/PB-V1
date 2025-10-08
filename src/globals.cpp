@@ -186,7 +186,13 @@ subsystems::DistanceAlign distanceAlign(
 subsystems::BrainUI brainUI(&auton);
 
 // ============================================================================
-// 7. GENERIC COMPONENTS (Game-Agnostic)
+// 7. RELIABILITY & DIAGNOSTICS SUBSYSTEMS
+// ============================================================================
+subsystems::Telemetry telemetry;  // CSV telemetry logger
+subsystems::Alerts alerts;         // Real-time controller alerts
+
+// ============================================================================
+// 8. GENERIC COMPONENTS (Game-Agnostic)
 // ============================================================================
 // These use universal lib:: classes and can be renamed for any game.
 //

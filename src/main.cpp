@@ -65,6 +65,12 @@ void initialize() {
     pros::Task lcd_task(lcd_position_task, nullptr, "LCD Position");
 
     // ========================================================================
+    // RELIABILITY SYSTEMS
+    // ========================================================================
+    // Initialize alert system odometry drift timer
+    alerts.resetDriftTimer();
+
+    // ========================================================================
     // GAME-SPECIFIC INITIALIZATION (Push Back)
     // ========================================================================
     // No game-specific initialization needed for Push Back intake
@@ -109,6 +115,12 @@ void competition_initialize() {
  * STUDENTS: Uncomment the autonomous routine you want to run.
  */
 void autonomous() {
+    // ========================================================================
+    // TELEMETRY LOGGING - Start recording autonomous
+    // ========================================================================
+    telemetry.init();
+    alerts.resetDriftTimer();
+
     // Run selected autonomous routine from UI
     // auton.run_auton(brainUI.getSelectedAuton());
 
@@ -130,6 +142,33 @@ void autonomous() {
     // auton.swpRED();
     // auton.swpBLUE();
     // auton.skills();
+
+    // ========================================================================
+    // TELEMETRY LOGGING - Stop recording
+    // ========================================================================
+    telemetry.close();
+}
+
+/**
+ * @brief Background task for telemetry logging during driver control
+ */
+void telemetry_task(void* param) {
+    while (true) {
+        if (telemetry.isLogging()) {
+            telemetry.log();
+        }
+        pros::delay(50);  // Log every 50ms
+    }
+}
+
+/**
+ * @brief Background task for real-time alerts
+ */
+void alerts_task(void* param) {
+    while (true) {
+        alerts.check();
+        pros::delay(100);  // Check every 100ms
+    }
 }
 
 /**
@@ -140,6 +179,16 @@ void opcontrol() {
     // Set brake modes for driver control
     leftMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
     rightMotors.set_brake_modes(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
+
+    // ========================================================================
+    // RELIABILITY SYSTEMS - Start monitoring
+    // ========================================================================
+    telemetry.init();
+    alerts.resetDriftTimer();
+
+    // Start background tasks for telemetry and alerts
+    pros::Task telemetry_bg(telemetry_task, nullptr, "Telemetry");
+    pros::Task alerts_bg(alerts_task, nullptr, "Alerts");
 
     // ========================================================================
     // LVGL UI - DISABLED (causes crash)
@@ -176,11 +225,13 @@ void opcontrol() {
         // A button: Align angle to wall
         if (master.get_digital_new_press(DIGITAL_A)) {
             distanceAlign.calculateAngleOneWall(0.0);
+            alerts.resetDriftTimer();  // Reset drift timer after correction
         }
 
         // X button: Align distance to wall
         if (master.get_digital_new_press(DIGITAL_X)) {
             distanceAlign.calculateDistOneWall(0.0, 72.0);
+            alerts.resetDriftTimer();  // Reset drift timer after correction
         }
 
         // ====================================================================
@@ -190,9 +241,14 @@ void opcontrol() {
         // LVGL disabled - using simple LCD display instead
         // brainUI.updateTelemetry();
 
-        // Controller screen display
-        master.print(0, 0, "x:%5.3Lf y:%5.3Lf", chassis.getPose().x, chassis.getPose().y);
+        // Controller screen display (Note: Alerts will override this periodically)
+        // master.print(0, 0, "x:%5.3Lf y:%5.3Lf", chassis.getPose().x, chassis.getPose().y);
 
         pros::delay(10);  // Small delay to prevent CPU overload
     }
+
+    // ========================================================================
+    // CLEANUP - Stop telemetry logging
+    // ========================================================================
+    telemetry.close();
 }
