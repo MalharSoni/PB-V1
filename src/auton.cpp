@@ -334,46 +334,90 @@ void Auton::pushBackSimple() {
 
 void Auton::odomDriveTest() {
     // ========================================================================
-    // STRAIGHT LINE TEST - Check if robot drives straight
+    // COMPLETE ODOMETRY TEST - Out and Back with Turn
     // ========================================================================
-    // Tests if robot can drive in a straight line without curving
+    // This test verifies:
+    // 1. Forward drive accuracy (48")
+    // 2. Turn accuracy (90° left)
+    // 3. Turn accuracy (90° right back to 0°)
+    // 4. Backward drive accuracy (return to start)
     //
-    // Expected results (GOOD):
-    // - Y ≈ 48 inches (drove 48" forward)
-    // - X ≈ 0 inches (no sideways drift)
-    // - Heading ≈ 0 degrees (stayed straight)
-    //
-    // Bad results (indicates problem):
-    // - X >> 0 (robot curved)
-    // - Heading >> 0 (robot turned while driving)
+    // Robot should return to starting position (0, 0, 0°) with minimal error.
     // ========================================================================
 
+    // Set starting position at origin
     chassis->setPose(0, 0, 0);
     pros::delay(1000);
 
-    // Drive 48 inches forward at 50% speed
-    chassis->moveToPoint(0, 48, 5000, {.maxSpeed = 60});
-    chassis->waitUntilDone();
-    pros::delay(500);
+    // ========================================================================
+    // PHASE 1: Drive forward 48 inches
+    // ========================================================================
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "Phase 1: Forward 48\"");
 
-    // Display results
+    chassis->moveToPoint(0, 48, 5000, {.forwards = true, .maxSpeed = 60, .minSpeed = 20});
+    chassis->waitUntilDone();
+    pros::delay(250);
+
+    lemlib::Pose pose1 = chassis->getPose();
+    pros::lcd::print(4, "P1: Y:%.1f X:%.1f H:%.1f", pose1.y, pose1.x, pose1.theta);
+    pros::delay(250);
+
+    // ========================================================================
+    // PHASE 2: Turn left 90 degrees
+    // ========================================================================
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "Phase 2: Turn left 90");
+
+    chassis->turnToHeading(90, 3000, {.maxSpeed = 60, .minSpeed = 15});
+    chassis->waitUntilDone();
+    pros::delay(250);
+
+    lemlib::Pose pose2 = chassis->getPose();
+    pros::lcd::print(4, "P2: Y:%.1f X:%.1f H:%.1f", pose2.y, pose2.x, pose2.theta);
+    pros::delay(250);
+
+    // ========================================================================
+    // PHASE 3: Turn right back to 0 degrees
+    // ========================================================================
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "Phase 3: Turn to 0");
+
+    chassis->turnToHeading(0, 3000, {.maxSpeed = 60, .minSpeed = 15});
+    chassis->waitUntilDone();
+    pros::delay(250);
+
+    lemlib::Pose pose3 = chassis->getPose();
+    pros::lcd::print(4, "P3: Y:%.1f X:%.1f H:%.1f", pose3.y, pose3.x, pose3.theta);
+    pros::delay(250);
+
+    // ========================================================================
+    // PHASE 4: Drive backward 48 inches to start
+    // ========================================================================
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "Phase 4: Back to start");
+
+    chassis->moveToPoint(0, 0, 5000, {.forwards = false, .maxSpeed = 60, .minSpeed = 20});
+    chassis->waitUntilDone();
+    pros::delay(250);
+
+    // ========================================================================
+    // FINAL RESULTS
+    // ========================================================================
     lemlib::Pose finalPose = chassis->getPose();
 
     pros::lcd::clear_line(3);
-    pros::lcd::print(3, "Target: Y=48 X=0 H=0");
+    pros::lcd::print(3, "START: X=0 Y=0 H=0");
 
     pros::lcd::clear_line(4);
-    pros::lcd::print(4, "Actual: Y:%.1f X:%.1f H:%.1f",
-                     finalPose.y, finalPose.x, finalPose.theta);
+    pros::lcd::print(4, "END: X:%.2f Y:%.2f H:%.1f",
+                     finalPose.x, finalPose.y, finalPose.theta);
 
-    // Calculate drift
-    float xDrift = finalPose.x;  // Should be near 0
-    float yError = finalPose.y - 48.0;
-    float headingDrift = finalPose.theta;
+    // Calculate total error from starting position
+    float totalError = sqrt(finalPose.x * finalPose.x + finalPose.y * finalPose.y);
 
     pros::lcd::clear_line(5);
-    pros::lcd::print(5, "Drift: X:%.1f\" H:%.1f deg",
-                     xDrift, headingDrift);
+    pros::lcd::print(5, "Error: %.2f\" H:%.1f deg", totalError, finalPose.theta);
 
     // Hold results on screen
     pros::delay(10000);

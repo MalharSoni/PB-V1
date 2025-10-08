@@ -68,8 +68,11 @@ pros::Rotation rearRotation(REAR_ROTATION, true);     // Horizontal wheel (port 
 //   - Measured: 3/16" to the RIGHT of centerline = +0.1875" (positive = right side)
 // Horizontal wheel offset: Distance from robot center of rotation (front/back)
 //   - Measured: 4 inches rearwards = -4.0 offset (negative = behind center)
-lemlib::TrackingWheel verticalTracking(&leftRotation, lemlib::Omniwheel::NEW_275, 0.1875);
-lemlib::TrackingWheel horizontalTracking(&rearRotation, lemlib::Omniwheel::NEW_275, -4.0);
+// NOTE: Tracking wheels measured at 2.865" diameter (calibrated from 48" test showing 2" overshoot)
+// Robot reported 48" but physically traveled 50" -> 50/48 = 1.042 scale factor
+// 2.75" (NEW_275) × 1.042 = 2.865" actual diameter
+lemlib::TrackingWheel verticalTracking(&leftRotation, 2.865, 0.1875);
+lemlib::TrackingWheel horizontalTracking(&rearRotation, 2.865, -4.0);
 
 // Drivetrain Configuration
 // HYBRID DRIVE: 4 omni wheels (outside) + 2 traction wheels (center)

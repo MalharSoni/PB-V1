@@ -113,10 +113,10 @@ void autonomous() {
     // auton.run_auton(brainUI.getSelectedAuton());
 
     // MOTOR DIAGNOSTICS - Check for motor imbalance
-    auton.motorDiagnostics();
+    // auton.motorDiagnostics();
 
-    // STRAIGHT LINE TEST - Check if robot drives straight (48 inches)
-    // auton.odomDriveTest();
+    // COMPLETE ODOMETRY TEST - Out and back with turns
+    auton.odomDriveTest();
 
     // ODOMETRY TUNING TEST - Drive in a square
     // auton.odomSquareTest();
