@@ -14,6 +14,8 @@
 #include "robot/distance_align.hpp"  // High Stakes specific
 #include "robot/telemetry.hpp"       // Telemetry logging system
 #include "robot/alerts.hpp"          // Real-time alert system
+#include "robot/imu_drift.hpp"       // IMU drift compensation
+#include "robot/simulation.hpp"      // Simulation with mock data
 #include "lib/Pneumatic.hpp"         // Generic pneumatic component library
 
 // ============================================================================
@@ -108,7 +110,6 @@ namespace subsystems {
     class Movement;
     class Selector;
     class Auton;
-    class BrainUI;
 }
 
 // ============================================================================
@@ -171,13 +172,14 @@ extern subsystems::Movement movement;
 // extern subsystems::Selector selector;  // Old High Stakes (archived)
 extern subsystems::DistanceAlign distanceAlign;
 extern subsystems::Auton auton;
-extern subsystems::BrainUI brainUI;  // LVGL-based brain screen UI
 
 // ----------------------------------------------------------------------------
 // Reliability & Diagnostics Subsystems
 // ----------------------------------------------------------------------------
 extern subsystems::Telemetry telemetry;  // CSV logging to SD card
 extern subsystems::Alerts alerts;        // Real-time controller alerts
+extern subsystems::IMUDrift imuDrift;    // IMU drift compensation
+extern subsystems::Simulation simulation; // Robot simulation with mock data
 
 // ----------------------------------------------------------------------------
 // Generic Pneumatic Components (lib:: namespace)

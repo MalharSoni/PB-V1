@@ -30,6 +30,58 @@ public:
      */
     void pushBackSimple();
 
+    // ========================================================================
+    // AUTONOMOUS TEMPLATES (Student Examples)
+    // ========================================================================
+
+    /**
+     * @brief Template 1: Simple 2-Ball Autonomous (Beginner)
+     *
+     * Goal: Score 2 balls with high reliability
+     * Strategy: Minimal movements, guaranteed points
+     * Time: ~8 seconds
+     * Complexity: ⭐ (Beginner)
+     *
+     * Students: Copy this as starting point for simple autonomous
+     */
+    void template_simple_2ball();
+
+    /**
+     * @brief Template 2: 4-Ball with Checkpoints (Intermediate)
+     *
+     * Goal: Score 4 balls with odometry checkpoints
+     * Strategy: Use wall alignment after each scoring cycle
+     * Time: ~12 seconds
+     * Complexity: ⭐⭐⭐ (Intermediate)
+     *
+     * Students: Shows wall alignment and error recovery
+     */
+    void template_4ball_checkpoints();
+
+    /**
+     * @brief Template 3: 6-Ball Optimized (Advanced)
+     *
+     * Goal: Score 6 balls with motion chaining
+     * Strategy: Seamless movements, parallel subsystem actions
+     * Time: ~14 seconds
+     * Complexity: ⭐⭐⭐⭐⭐ (Advanced)
+     *
+     * Students: Shows all advanced techniques
+     */
+    void template_6ball_optimized();
+
+    /**
+     * @brief Template 4: Skills Run (60 seconds)
+     *
+     * Goal: Maximum score in 60 seconds
+     * Strategy: Loop scoring with periodic resets
+     * Time: 60 seconds
+     * Complexity: ⭐⭐⭐⭐ (Advanced)
+     *
+     * Students: Endurance autonomous with error handling
+     */
+    void template_skills();
+
     /**
      * @brief Simple drive test - Verify tracking wheels work
      *

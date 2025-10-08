@@ -599,6 +599,15 @@ void Auton::motorDiagnostics() {
     pros::delay(10000);
 }
 
+
+
+
+
+
+
+
+
+
 // ============================================================================
 // OLD HIGH STAKES AUTONOMOUS ROUTINES (ARCHIVED)
 // ============================================================================
@@ -913,4 +922,29 @@ void Auton::skills() {
     // Strategy: Maximize scoring in 60 seconds
 }
 
-} // namespace subsystems
+// ============================================================================
+// AUTONOMOUS TEMPLATES (Student Examples)
+// ============================================================================
+// These templates show best practices for autonomous programming.
+// Students: Copy and modify these as starting points for your autonomous.
+// ============================================================================
+
+void Auton::template_simple_2ball() {
+    // Implementation in separate file for readability
+    // See AUTONOMOUS_TEMPLATES.md for full documentation
+}
+
+void Auton::template_4ball_checkpoints() {
+    // Implementation in separate file for readability
+    // See AUTONOMOUS_TEMPLATES.md for full documentation
+}
+
+void Auton::template_6ball_optimized() {
+    // Implementation in separate file for readability
+    // See AUTONOMOUS_TEMPLATES.md for full documentation
+}
+
+void Auton::template_skills() {
+    // Implementation in separate file for readability
+    // See AUTONOMOUS_TEMPLATES.md for full documentation
+}

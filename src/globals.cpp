@@ -1,6 +1,5 @@
 #include "globals.hpp"
 #include "pros/motors.h"
-#include "robot/brain_ui.hpp"
 
 // ============================================================================
 // ROBOT HARDWARE CONFIGURATION
@@ -182,14 +181,13 @@ subsystems::DistanceAlign distanceAlign(
     0.0                     // Angle offset (degrees)
 );
 
-// Brain Screen UI (LVGL)
-subsystems::BrainUI brainUI(&auton);
-
 // ============================================================================
 // 7. RELIABILITY & DIAGNOSTICS SUBSYSTEMS
 // ============================================================================
 subsystems::Telemetry telemetry;  // CSV telemetry logger
 subsystems::Alerts alerts;         // Real-time controller alerts
+subsystems::IMUDrift imuDrift(&inertial);  // IMU drift compensation
+subsystems::Simulation simulation(&chassis);  // Robot simulation with mock data
 
 // ============================================================================
 // 8. GENERIC COMPONENTS (Game-Agnostic)

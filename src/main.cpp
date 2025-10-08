@@ -1,7 +1,6 @@
 #include "main.h"
 #include "globals.hpp"
 #include "robot_config.hpp"
-#include "robot/brain_ui.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
 
@@ -70,16 +69,45 @@ void initialize() {
     // Initialize alert system odometry drift timer
     alerts.resetDriftTimer();
 
+    // Characterize IMU drift (robot MUST be still!)
+    pros::lcd::set_text(3, "Measuring IMU drift...");
+    if (imuDrift.characterize()) {
+        pros::lcd::print(3, "IMU: %.4f deg/s drift", imuDrift.getDriftRate());
+    } else {
+        pros::lcd::set_text(3, "IMU: MOVED - No drift comp");
+    }
+    pros::delay(1000);
+
     // ========================================================================
-    // GAME-SPECIFIC INITIALIZATION (Push Back)
+    // SIMULATION MODE
     // ========================================================================
-    // No game-specific initialization needed for Push Back intake
+    // STUDENTS: Uncomment to enable simulation mode (test without robot!)
+    simulation.setEnabled(true);  // Enable simulation
+    // simulation.reset();            // Reset to starting position
 }
 
 /**
  * Runs when robot is disabled (competition switch off).
  */
 void disabled() {}
+
+/**
+ * @brief Background task for simulation updates
+ */
+void simulation_task(void* param) {
+    while (true) {
+        if (simulation.isEnabled()) {
+            simulation.update();
+            // Optional: Print state every second
+            // static uint32_t lastPrint = 0;
+            // if (pros::millis() - lastPrint > 1000) {
+            //     simulation.printState();
+            //     lastPrint = pros::millis();
+            // }
+        }
+        pros::delay(10);  // Update every 10ms
+    }
+}
 
 /**
  * Runs when competition switch is connected.
@@ -116,10 +144,18 @@ void competition_initialize() {
  */
 void autonomous() {
     // ========================================================================
+    // SIMULATION MODE - Start simulation background task
+    // ========================================================================
+    pros::Task simulation_bg(simulation_task, nullptr, "Simulation");
+
+    // ========================================================================
     // TELEMETRY LOGGING - Start recording autonomous
     // ========================================================================
     telemetry.init();
     alerts.resetDriftTimer();
+
+    // Start IMU drift compensation
+    imuDrift.startCompensation();
 
     // Run selected autonomous routine from UI
     // auton.run_auton(brainUI.getSelectedAuton());
@@ -142,6 +178,14 @@ void autonomous() {
     // auton.swpRED();
     // auton.swpBLUE();
     // auton.skills();
+
+    // ========================================================================
+    // SIMULATION MODE - Show final state
+    // ========================================================================
+    if (simulation.isEnabled()) {
+        simulation.printState();
+        simulation.drawField();
+    }
 
     // ========================================================================
     // TELEMETRY LOGGING - Stop recording
