@@ -20,12 +20,12 @@
 // All port conflicts have been resolved. Current port assignments:
 //
 // MOTORS (V5 Smart Ports):
-//   Drivetrain: 11, 12, 13, 14, 15, 16
+//   Drivetrain: 12, 14, 15, 16 (4-motor drive - removed 11, 13)
 //   Intake: 18, 19, 20
 //
 // SENSORS (V5 Smart Ports):
 //   IMU: 10
-//   Tracking wheels: 1, 2
+//   Tracking wheels: 7, 8
 //   Distance sensors: 3, 4
 //
 // PNEUMATICS (ADI Ports): C, H, B, D, F
@@ -34,12 +34,13 @@
 // ----------------------------------------------------------------------------
 // DRIVETRAIN MOTORS (V5 Smart Ports)
 // ----------------------------------------------------------------------------
+// 4-MOTOR DRIVE: 2 motors per side (removed 11 and 12 - no gearbox yet)
 #define LEFT_MOTOR_FRONT -15    // Left front drive motor (reversed)
 #define LEFT_MOTOR_MID -14      // Left middle drive motor (reversed)
-#define LEFT_MOTOR_REAR -11     // Left rear drive motor (reversed)
+// #define LEFT_MOTOR_REAR -11  // REMOVED - No gearbox yet
 #define RIGHT_MOTOR_FRONT 16    // Right front drive motor
-#define RIGHT_MOTOR_MID 12      // Right middle drive motor
-#define RIGHT_MOTOR_REAR 13     // Right rear drive motor
+#define RIGHT_MOTOR_MID 13      // Right middle drive motor
+// #define RIGHT_MOTOR_REAR 12  // REMOVED - No gearbox yet
 
 // ----------------------------------------------------------------------------
 // SUBSYSTEM MOTORS (V5 Smart Ports)
@@ -57,8 +58,8 @@
 // SENSORS (V5 Smart Ports)
 // ----------------------------------------------------------------------------
 #define INERTIAL 10                     // IMU sensor for heading/rotation
-#define LEFT_ROTATION 1                 // Left tracking wheel (odometry)
-#define REAR_ROTATION 2                 // Rear tracking wheel (odometry)
+#define LEFT_ROTATION 8                 // Left tracking wheel (odometry)
+#define REAR_ROTATION 7                 // Rear tracking wheel (odometry)
 // #define INTAKE_COLOR_SENSOR_PORT 5   // Old High Stakes - Optical sensor (archived)
 #define RIGHT_DISTANCE_PORT 3           // Right distance sensor (wall align)
 #define LEFT_DISTANCE_PORT 4            // Left distance sensor (wall align)
@@ -118,14 +119,14 @@ namespace subsystems {
 extern pros::Controller master;
 
 // ----------------------------------------------------------------------------
-// Drivetrain Motors & Motor Groups
+// Drivetrain Motors & Motor Groups (4-motor drive)
 // ----------------------------------------------------------------------------
 extern pros::Motor leftFrontMotor;
 extern pros::Motor leftMidMotor;
-extern pros::Motor leftRearMotor;
+// extern pros::Motor leftRearMotor;  // REMOVED - No gearbox yet
 extern pros::Motor rightFrontMotor;
 extern pros::Motor rightMidMotor;
-extern pros::Motor rightRearMotor;
+// extern pros::Motor rightRearMotor;  // REMOVED - No gearbox yet
 extern pros::MotorGroup leftMotors;
 extern pros::MotorGroup rightMotors;
 

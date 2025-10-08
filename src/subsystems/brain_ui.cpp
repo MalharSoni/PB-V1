@@ -14,6 +14,22 @@
 namespace subsystems {
 
 // ============================================================================
+// LVGL TASK HANDLER
+// ============================================================================
+
+/**
+ * @brief Background task to handle LVGL updates
+ * Required for LVGL to process events and render UI
+ * Runs every 10ms in separate PROS task
+ */
+void lvgl_task_handler(void* param) {
+    while (true) {
+        lv_task_handler();
+        pros::delay(10);  // Run every 10ms
+    }
+}
+
+// ============================================================================
 // STATIC MEMBERS INITIALIZATION
 // ============================================================================
 
@@ -69,6 +85,12 @@ BrainUI::BrainUI(Auton* auton)
 // ============================================================================
 
 void BrainUI::init() {
+    // Start LVGL task handler in background
+    pros::Task lvgl_task(lvgl_task_handler, nullptr, "LVGL Task");
+
+    // Small delay to let LVGL task start
+    pros::delay(20);
+
     // Initialize styles
     initStyles();
 
@@ -164,22 +186,10 @@ void BrainUI::createSplashScreen() {
     splash_screen = lv_obj_create(NULL, NULL);
     lv_obj_set_style(splash_screen, &style_screen);
 
-    // Team logo - CTRC 839Y (placeholder until logo data added)
-    // For now, create a simple rectangle as placeholder
-    splash_logo = lv_obj_create(splash_screen, NULL);
-    lv_obj_set_size(splash_logo, 200, 150);
+    // Team logo - CTRC 839Y (100x100 pixel image)
+    splash_logo = lv_img_create(splash_screen, NULL);
+    lv_img_set_src(splash_logo, &logo_ctrc_100x100);
     lv_obj_align(splash_logo, NULL, LV_ALIGN_CENTER, 0, -30);
-
-    // Logo label - shows team name until logo image is added
-    lv_obj_t* logo_text = lv_label_create(splash_logo, NULL);
-    lv_obj_set_style(logo_text, &style_title);
-    lv_label_set_text(logo_text, "CTRC\n839Y");
-    lv_obj_align(logo_text, NULL, LV_ALIGN_CENTER, 0, 0);
-
-    // Uncomment when you add logo pixel data to logo.h:
-    // splash_logo = lv_img_create(splash_screen, NULL);
-    // lv_img_set_src(splash_logo, &logo_ctrc_200x200);
-    // lv_obj_align(splash_logo, NULL, LV_ALIGN_CENTER, 0, -20);
 
     // Status label
     splash_status_label = lv_label_create(splash_screen, NULL);

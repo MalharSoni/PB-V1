@@ -1,5 +1,6 @@
 #include "robot_config.hpp"
 #include "globals.hpp"
+#include "pros/llemu.hpp"
 #include <iostream>
 
 namespace robot_config {
@@ -11,6 +12,7 @@ namespace robot_config {
 void calibrate_imu() {
     std::cout << "Calibrating IMU..." << std::endl;
     master.print(0, 0, "IMU calibrating...");
+    pros::lcd::print(3, "IMU: Calibrating...");
 
     inertial.reset();
 
@@ -20,16 +22,19 @@ void calibrate_imu() {
         pros::delay(10);
         calibration_time += 10;
 
-        // Timeout after 3 seconds
-        if (calibration_time > 3000) {
+        // Timeout after 5 seconds (increased from 3)
+        if (calibration_time > 5000) {
             std::cout << "IMU calibration timeout!" << std::endl;
-            master.print(0, 0, "IMU timeout!");
+            master.print(0, 0, "IMU TIMEOUT!");
+            pros::lcd::print(3, "IMU: TIMEOUT - Check port!");
+            pros::delay(2000);
             return;
         }
     }
 
     std::cout << "IMU calibration complete (" << calibration_time << "ms)" << std::endl;
     master.print(0, 0, "IMU ready!");
+    pros::lcd::print(3, "IMU: Ready (%dms)", calibration_time);
     pros::delay(500);
     master.clear();
 }

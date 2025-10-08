@@ -2,6 +2,8 @@
 #include "globals.hpp"
 #include "lemlib/chassis/chassis.hpp"
 #include "pros/rtos.hpp"
+#include "pros/llemu.hpp"
+#include <cmath>
 
 /*
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -328,6 +330,216 @@ void Auton::pushBackSimple() {
 
     // 7. Stop scoring
     intake.stopAll();
+}
+
+void Auton::odomDriveTest() {
+    // ========================================================================
+    // STRAIGHT LINE TEST - Check if robot drives straight
+    // ========================================================================
+    // Tests if robot can drive in a straight line without curving
+    //
+    // Expected results (GOOD):
+    // - Y ≈ 48 inches (drove 48" forward)
+    // - X ≈ 0 inches (no sideways drift)
+    // - Heading ≈ 0 degrees (stayed straight)
+    //
+    // Bad results (indicates problem):
+    // - X >> 0 (robot curved)
+    // - Heading >> 0 (robot turned while driving)
+    // ========================================================================
+
+    chassis->setPose(0, 0, 0);
+    pros::delay(1000);
+
+    // Drive 48 inches forward at 50% speed
+    chassis->moveToPoint(0, 48, 5000, {.maxSpeed = 60});
+    chassis->waitUntilDone();
+    pros::delay(500);
+
+    // Display results
+    lemlib::Pose finalPose = chassis->getPose();
+
+    pros::lcd::clear_line(3);
+    pros::lcd::print(3, "Target: Y=48 X=0 H=0");
+
+    pros::lcd::clear_line(4);
+    pros::lcd::print(4, "Actual: Y:%.1f X:%.1f H:%.1f",
+                     finalPose.y, finalPose.x, finalPose.theta);
+
+    // Calculate drift
+    float xDrift = finalPose.x;  // Should be near 0
+    float yError = finalPose.y - 48.0;
+    float headingDrift = finalPose.theta;
+
+    pros::lcd::clear_line(5);
+    pros::lcd::print(5, "Drift: X:%.1f\" H:%.1f deg",
+                     xDrift, headingDrift);
+
+    // Hold results on screen
+    pros::delay(10000);
+}
+
+void Auton::odomSquareTest() {
+    // ========================================================================
+    // ODOMETRY TUNING TEST - DRIVE IN A SQUARE
+    // ========================================================================
+    // This routine drives in a 24" x 24" square to test odometry accuracy.
+    // After completion, check the brain screen position display:
+    // - X should return to starting X (within ~0.5 inches)
+    // - Y should return to starting Y (within ~0.5 inches)
+    // - Heading should return to 0° (within ~2-3 degrees)
+    //
+    // If position drifts significantly:
+    // 1. Check tracking wheel offsets in globals.cpp
+    // 2. Verify wheel diameters are correct
+    // 3. Ensure tracking wheels spin freely without friction
+    // ========================================================================
+
+    // Set starting position at origin
+    chassis->setPose(0, 0, 0);
+
+    // Give time to see starting position on screen
+    pros::delay(1000);
+
+    // Side length of square (inches)
+    const float side_length = 24.0;
+    const int timeout = 3000;  // 3 second timeout per movement
+
+    // Drive in a square pattern
+    // Point 1: Move forward (North)
+    chassis->moveToPoint(0, side_length, timeout);
+    chassis->waitUntilDone();
+    pros::delay(500);  // Pause to let position stabilize
+
+    // Point 2: Move right (East)
+    chassis->moveToPoint(side_length, side_length, timeout);
+    chassis->waitUntilDone();
+    pros::delay(500);
+
+    // Point 3: Move backward (South)
+    chassis->moveToPoint(side_length, 0, timeout);
+    chassis->waitUntilDone();
+    pros::delay(500);
+
+    // Point 4: Return to start (West)
+    chassis->moveToPoint(0, 0, timeout);
+    chassis->waitUntilDone();
+    pros::delay(500);
+
+    // Print final position to brain screen
+    lemlib::Pose finalPose = chassis->getPose();
+    pros::lcd::clear_line(5);
+    pros::lcd::print(5, "Final: X:%.2f Y:%.2f H:%.1f",
+                     finalPose.x, finalPose.y, finalPose.theta);
+
+    // Calculate error from start position
+    float error_x = finalPose.x - 0.0;
+    float error_y = finalPose.y - 0.0;
+    float error_heading = finalPose.theta - 0.0;
+    float total_error = sqrt(error_x * error_x + error_y * error_y);
+
+    pros::lcd::clear_line(4);
+    pros::lcd::print(4, "Error: %.2f\" H:%.1f deg",
+                     total_error, error_heading);
+
+    // Keep final position on screen
+    pros::delay(10000);
+}
+
+void Auton::motorDiagnostics() {
+    // ========================================================================
+    // MOTOR DIAGNOSTICS TEST
+    // ========================================================================
+    // This test helps identify motor imbalances that cause drift.
+    // Displays individual motor temperatures, velocities, and power draw.
+    // Run this test to check for:
+    // - Damaged/weak motors (lower velocity or higher temp)
+    // - Port configuration errors (motors not responding)
+    // - Systematic imbalance between left and right sides
+    // ========================================================================
+
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "===== MOTOR DIAGNOSTICS =====");
+    pros::lcd::set_text(1, "Starting test in 2 seconds...");
+    pros::delay(2000);
+
+    // Reset position
+    chassis->setPose(0, 0, 0);
+
+    // Display initial motor status
+    pros::lcd::set_text(1, "BEFORE DRIVE:");
+    pros::lcd::print(2, "L15:%.0fC L14:%.0fC",
+                     leftFrontMotor.get_temperature(),
+                     leftMidMotor.get_temperature());
+    pros::lcd::print(3, "R16:%.0fC R13:%.0fC",
+                     rightFrontMotor.get_temperature(),
+                     rightMidMotor.get_temperature());
+    pros::delay(2000);
+
+    // Start driving forward at 60% speed
+    pros::lcd::set_text(1, "DRIVING - Monitor motors:");
+    chassis->moveToPoint(0, 48, 5000, {.maxSpeed = 60});
+
+    // Monitor motors during drive (sample every 200ms)
+    for (int i = 0; i < 20; i++) {
+        // Get motor velocities (RPM)
+        float lf_vel = leftFrontMotor.get_actual_velocity();
+        float lm_vel = leftMidMotor.get_actual_velocity();
+        float rf_vel = rightFrontMotor.get_actual_velocity();
+        float rm_vel = rightMidMotor.get_actual_velocity();
+
+        // Get motor power draw (mA)
+        float lf_curr = leftFrontMotor.get_current_draw();
+        float lm_curr = leftMidMotor.get_current_draw();
+        float rf_curr = rightFrontMotor.get_current_draw();
+        float rm_curr = rightMidMotor.get_current_draw();
+
+        // Display velocities
+        pros::lcd::print(2, "L15:%.0f L14:%.0f RPM", lf_vel, lm_vel);
+        pros::lcd::print(3, "R16:%.0f R13:%.0f RPM", rf_vel, rm_vel);
+
+        // Display current draw
+        pros::lcd::print(4, "L:%.0f/%.0f mA", lf_curr, lm_curr);
+        pros::lcd::print(5, "R:%.0f/%.0f mA", rf_curr, rm_curr);
+
+        // Calculate averages
+        float left_avg = (lf_vel + lm_vel) / 2.0;
+        float right_avg = (rf_vel + rm_vel) / 2.0;
+        float imbalance = left_avg - right_avg;
+
+        pros::lcd::print(6, "Imbal: %.1f RPM (L-R)", imbalance);
+
+        pros::delay(200);
+    }
+
+    chassis->waitUntilDone();
+
+    // Final diagnostics after drive
+    pros::delay(500);
+    pros::lcd::set_text(1, "AFTER DRIVE:");
+
+    // Temperatures
+    pros::lcd::print(2, "L15:%.0fC L14:%.0fC",
+                     leftFrontMotor.get_temperature(),
+                     leftMidMotor.get_temperature());
+    pros::lcd::print(3, "R16:%.0fC R13:%.0fC",
+                     rightFrontMotor.get_temperature(),
+                     rightMidMotor.get_temperature());
+
+    // Final position
+    lemlib::Pose finalPose = chassis->getPose();
+    pros::lcd::print(4, "Pos: Y:%.1f X:%.1f", finalPose.y, finalPose.x);
+    pros::lcd::print(5, "Heading: %.1f deg", finalPose.theta);
+
+    // Motor efficiencies (lower efficiency = problem motor)
+    float lf_eff = leftFrontMotor.get_efficiency();
+    float lm_eff = leftMidMotor.get_efficiency();
+    float rf_eff = rightFrontMotor.get_efficiency();
+    float rm_eff = rightMidMotor.get_efficiency();
+    pros::lcd::print(6, "Eff: %.0f/%.0f %.0f/%.0f", lf_eff, lm_eff, rf_eff, rm_eff);
+
+    pros::lcd::set_text(7, "Hold for 10 seconds...");
+    pros::delay(10000);
 }
 
 // ============================================================================

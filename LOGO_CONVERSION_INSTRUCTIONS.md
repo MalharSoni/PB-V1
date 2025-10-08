@@ -1,19 +1,49 @@
 # Logo Integration Instructions for Team 839Y
 
-## Overview
-Your CTRC logo (`700x700_CTRC_White_Logo_FC.png`) is ready to be integrated into the brain screen UI. However, due to LVGL version differences (PROS uses v5.3 while the online converter targets v8+), manual conversion is needed.
+## ✅ LOGO INTEGRATION COMPLETE!
+
+Your CTRC logo has been successfully integrated into the brain screen UI!
 
 ## Your Logo File
-**Location:** `/Users/malharsoni/Downloads/700x700_CTRC_White_Logo_FC.png`
-**Description:** Yellow diagonal stripe pattern (caution tape design) on white background
+**Original:** `/Users/malharsoni/Downloads/700x700_CTRC_White_Logo_FC.png`
+**Used:** `/Users/malharsoni/Downloads/logo_100 x 100.png` (100x100 pixels)
+**Description:** Yellow diagonal stripe pattern (caution tape design) on transparent background
+**Size:** 19.5 KB (20,000 bytes in RGB565 format)
 
-## Option 1: Use Text Logo (Current - No Conversion Needed)
+## What Was Implemented
 
-The UI currently displays "CTRC\n839Y" in gold text as a placeholder. This looks clean and professional.
+### 1. Logo Conversion ✅
+- Created `convert_logo.py` Python script to convert PNG to RGB565 format
+- Converted `logo_100 x 100.png` to C array in `include/logo.h`
+- Generated 1,709 lines of LVGL 5.3 compatible code
 
-**To keep text logo:** Do nothing - it's already working!
+### 2. LVGL Crash Fix ✅
+- **Problem:** LVGL initialization in `initialize()` caused data abort exception
+- **Solution:** Moved initialization to `opcontrol()` (after RTOS scheduler starts)
+- Added background task handler calling `lv_task_handler()` every 10ms
 
-## Option 2: Convert Your Actual Logo (Advanced)
+### 3. UI Integration ✅
+- Splash screen shows CTRC logo for 2 seconds on driver control start
+- Operation screen displays live telemetry during matches
+- Autonomous selector ready for competition use
+
+## How It Works Now
+
+When you start driver control (`opcontrol()`):
+1. LVGL initializes (after RTOS is running - no crash!)
+2. Background task starts handling LVGL updates
+3. Splash screen appears with CTRC logo (2 seconds)
+4. Operation screen loads with live telemetry
+5. Telemetry updates every 10ms during match
+
+## Files Modified
+
+- ✅ `include/logo.h` - 100x100 pixel CTRC logo in RGB565 format
+- ✅ `src/subsystems/brain_ui.cpp` - LVGL task handler + logo display
+- ✅ `src/main.cpp` - LVGL initialization moved to opcontrol()
+- ✅ `convert_logo.py` - Logo conversion utility script
+
+## Manual Logo Conversion (Advanced)
 
 Due to LVGL 5.3 compatibility requirements, logo conversion requires manual steps:
 

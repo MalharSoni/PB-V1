@@ -32,54 +32,64 @@ bool wallToggle = false;
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
 // ============================================================================
-// 3. DRIVETRAIN
+// 3. DRIVETRAIN (4-MOTOR DRIVE)
 // ============================================================================
 
 // Individual Motors (Blue Gearset = 600 RPM)
+// NOTE: Motors 11 and 13 removed - no gearbox yet
 pros::Motor leftFrontMotor(LEFT_MOTOR_FRONT, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor leftMidMotor(LEFT_MOTOR_MID, pros::E_MOTOR_GEAR_BLUE);
-pros::Motor leftRearMotor(LEFT_MOTOR_REAR, pros::E_MOTOR_GEAR_BLUE);
+// pros::Motor leftRearMotor(LEFT_MOTOR_REAR, pros::E_MOTOR_GEAR_BLUE);  // REMOVED
 pros::Motor rightFrontMotor(RIGHT_MOTOR_FRONT, pros::E_MOTOR_GEAR_BLUE);
 pros::Motor rightMidMotor(RIGHT_MOTOR_MID, pros::E_MOTOR_GEAR_BLUE);
-pros::Motor rightRearMotor(RIGHT_MOTOR_REAR, pros::E_MOTOR_GEAR_BLUE);
+// pros::Motor rightRearMotor(RIGHT_MOTOR_REAR, pros::E_MOTOR_GEAR_BLUE);  // REMOVED
 
-// Motor Groups (for synchronized control)
-pros::MotorGroup leftMotors({leftFrontMotor, leftMidMotor, leftRearMotor});
-pros::MotorGroup rightMotors({rightFrontMotor, rightMidMotor, rightRearMotor});
+// Motor Groups (for synchronized control) - 2 motors per side
+pros::MotorGroup leftMotors({leftFrontMotor, leftMidMotor});
+pros::MotorGroup rightMotors({rightFrontMotor, rightMidMotor});
 
 // ============================================================================
 // 4. SENSORS
 // ============================================================================
 pros::Imu inertial(INERTIAL);
-pros::Rotation leftRotation(LEFT_ROTATION, true);     // Reversed
-pros::Rotation rearRotation(REAR_ROTATION, true);     // Reversed
+pros::Rotation leftRotation(LEFT_ROTATION, true);     // Vertical wheel (port 8) - REVERSED
+pros::Rotation rearRotation(REAR_ROTATION, true);     // Horizontal wheel (port 7) - REVERSED
 
 // ============================================================================
 // 5. LEMLIB CONFIGURATION
 // ============================================================================
 
 // Tracking Wheels (for odometry)
-// Enabled with ports 1 (left vertical) and 2 (rear horizontal)
-lemlib::TrackingWheel verticalTracking(&leftRotation, lemlib::Omniwheel::NEW_275, 0.0);
-lemlib::TrackingWheel horizontalTracking(&rearRotation, lemlib::Omniwheel::NEW_2, 3.25);
+// TANK DRIVE CONFIGURATION:
+// - Vertical wheel: measures forward/backward movement
+// - Horizontal wheel: measures ROTATION (not strafing - tank drives can't strafe!)
+//
+// Vertical wheel offset: Distance from robot center of rotation (left/right)
+//   - Measured: 3/16" to the RIGHT of centerline = +0.1875" (positive = right side)
+// Horizontal wheel offset: Distance from robot center of rotation (front/back)
+//   - Measured: 4 inches rearwards = -4.0 offset (negative = behind center)
+lemlib::TrackingWheel verticalTracking(&leftRotation, lemlib::Omniwheel::NEW_275, 0.1875);
+lemlib::TrackingWheel horizontalTracking(&rearRotation, lemlib::Omniwheel::NEW_275, -4.0);
 
 // Drivetrain Configuration
+// HYBRID DRIVE: 4 omni wheels (outside) + 2 traction wheels (center)
 lemlib::Drivetrain drivetrain {
     &leftMotors,                    // Left motor group
     &rightMotors,                   // Right motor group
-    9.9,                            // Track width (inches) - distance between left/right wheels
+    10.0,                           // Track width (inches) - MEASURED: exactly 10.0"
     lemlib::Omniwheel::NEW_325,     // Wheel type: 3.25" omni wheels
     450,                            // Drivetrain RPM (with blue cartridge: 600 RPM * gear ratio)
-    2                               // Horizontal drift correction (degrees)
+    8                               // Horizontal drift correction - 8 for hybrid drive with traction wheels
+                                    // LemLib docs: use 2 for omni-only, 8 for traction wheels
 };
 
 // Odometry Sensors
 // Tracking wheels enabled - ports 1 (left vertical) and 2 (rear horizontal)
 // NOTE: Test and tune tracking wheel offsets during competition if needed
 lemlib::OdomSensors sensors(
-    nullptr,   // Vertical tracking wheel (left) - port 1
+    &verticalTracking,   // Vertical tracking wheel (left) - port 1
     nullptr,             // Vertical tracking wheel 2 (right) - not used
-    nullptr, // Horizontal tracking wheel (rear) - port 2
+    &horizontalTracking, // Horizontal tracking wheel (rear) - port 2
     nullptr,             // Horizontal tracking wheel 2 - not used
     &inertial            // IMU sensor (required) - port 10
 );

@@ -30,6 +30,40 @@ public:
      */
     void pushBackSimple();
 
+    /**
+     * @brief Simple drive test - Verify tracking wheels work
+     *
+     * Drives robot 24" forward to verify Y-axis tracking.
+     * Check brain screen to ensure Y increases and X stays near 0.
+     */
+    void odomDriveTest();
+
+    /**
+     * @brief Odometry tuning test - Drive in a 24" x 24" square
+     *
+     * Tests odometry accuracy by driving in a square pattern.
+     * Robot should return to starting position with minimal drift.
+     * Check brain screen for final position error after test completes.
+     */
+    void odomSquareTest();
+
+    /**
+     * @brief Motor diagnostics test - Check for motor imbalance
+     *
+     * Drives 48" forward while displaying individual motor metrics:
+     * - Velocities (RPM) for each motor
+     * - Current draw (mA) for each motor
+     * - Temperatures before and after drive
+     * - Motor efficiency ratings
+     * - Real-time imbalance calculation (L-R)
+     *
+     * Use this to identify:
+     * - Weak/damaged motors (lower velocity, higher temp)
+     * - Port configuration errors (motors not responding)
+     * - Systematic imbalance causing drift
+     */
+    void motorDiagnostics();
+
     // ========================================================================
     // OLD HIGH STAKES AUTONOMOUS ROUTINES (Archived)
     // ========================================================================
