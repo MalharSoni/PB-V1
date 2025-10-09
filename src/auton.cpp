@@ -303,28 +303,37 @@ void Auton::pushBackSimple() {
 
     // 1. Set starting position (x, y, heading in degrees)
     // Example: Starting at (-12, -60, 0) - back left of field, facing forward
-    chassis->setPose(0.75, -49.25, 0);
+    chassis->setPose(14, -63, 0);
 
     // 2. Start intake to store balls
     intake.store();
 
     // 3. Move to first point to collect balls (x, y, timeout_ms)
-    chassis->moveToPoint(23, -25, 2000);  
+    chassis->moveToPoint(18, -28, 2000);
     chassis->waitUntilDone();  // Wait until completely stopped
     pros::delay(500);  // pause
 
-    // 4. Move to second point while still intaking
-    chassis->moveToPoint(43, -8, 2000);  // Move to center area
+    // 4. Move to under long goal while still intaking
+    chassis->moveToPoint(40, -8.5, 2000);  // Move to center area
     chassis->waitUntilDone();  // Wait until completely stopped
     pros::delay(500);  // pause
-
+    
     // 5. Stop intake
     intake.stopAll();
     pros::delay(200);  // Brief pause
 
-    // 6. Score balls at level 2
-    chassis->moveToPoint(12, -12, 1500, {.forwards = false, .maxSpeed = 60});
-    chassis->turnToPoint(62, -72, 1500, {.maxSpeed = 70}, false);
+    // 6. Back Out
+    chassis->moveToPoint(30, -30, 2000, {.forwards = false});
+    chassis->moveToPoint(48, -48, 2000, {.forwards = false});
+
+    // 7. Go to Loader
+    chassis->turnToPoint(44, -58, 1500, {.maxSpeed = 70}, false);
+    chassis->moveToPoint(48, -56, 1500, {.maxSpeed = 60});
+
+    // 8. Score balls at level 2
+    chassis->moveToPoint(48, -30, 1500, {.forwards = false, .maxSpeed = 60});
+    // chassis->turnToPoint(62, -72, 1500, {.maxSpeed = 70}, false);
+    chassis->waitUntilDone();
     intake.scoreLevel2();
     pros::delay(1000);  // Run outtake for 1 second
 

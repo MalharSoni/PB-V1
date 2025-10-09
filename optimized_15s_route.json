@@ -1,0 +1,55 @@
+{
+  "waypoints": [
+    {
+      "x": -60.0,
+      "y": -60.0,
+      "heading": 45.0,
+      "max_speed": 80.0,
+      "timeout": 3000.0,
+      "curve_smooth": 0.3
+    },
+    {
+      "x": -42.0,
+      "y": -42.0,
+      "heading": 0.0,
+      "max_speed": 70.0,
+      "timeout": 2000.0,
+      "curve_smooth": 0.4
+    },
+    {
+      "x": -24.0,
+      "y": -42.0,
+      "heading": 0.0,
+      "max_speed": 80.0,
+      "timeout": 1500.0,
+      "curve_smooth": 0.3
+    },
+    {
+      "x": -12.0,
+      "y": -48.0,
+      "heading": 0.0,
+      "max_speed": 60.0,
+      "timeout": 1500.0,
+      "curve_smooth": 0.4
+    },
+    {
+      "x": -48.0,
+      "y": -60.0,
+      "heading": 90.0,
+      "max_speed": 70.0,
+      "timeout": 2500.0,
+      "curve_smooth": 0.5
+    },
+    {
+      "x": -60.0,
+      "y": -54.0,
+      "heading": 90.0,
+      "max_speed": 40.0,
+      "timeout": 1500.0,
+      "curve_smooth": 0.3
+    }
+  ],
+  "created": "2025-10-08T07:30:00",
+  "name": "Optimized 15s Corner Sweep",
+  "description": "Conservative 3-ball route staying on own half, starts and ends at park barrier"
+}
