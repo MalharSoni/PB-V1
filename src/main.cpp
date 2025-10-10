@@ -99,7 +99,10 @@ void initialize() {
  */
 void disabled() {
     // Close telemetry logger to flush remaining data
-    telem::tuning_logger_close();
+    // NOTE: Don't close if we're in the middle of autonomous logging
+    // The autonomous() function will close it properly
+    printf("[DISABLED] disabled() called\n");
+    // telem::tuning_logger_close();  // Commented out - let autonomous() handle closing
 }
 
 /**
@@ -139,8 +142,6 @@ void autonomous() {
     // ========================================================================
     // TELEMETRY AUTO-LOGGING (For PID Tuning)
     // ========================================================================
-    // Auto-start logging if ENABLE_AUTON_LOGGING is defined in globals.hpp
-    // To disable for competition, comment out the #define in globals.hpp
     #ifdef ENABLE_AUTON_LOGGING
     pros::lcd::print(0, "Checking SD card...");
     pros::delay(100);
@@ -154,9 +155,9 @@ void autonomous() {
         telem::tuning_logger_close();
         pros::delay(50);
 
-        // Use descriptive filename: LemLib defaults
-        if (telem::tuning_logger_init("lemlib_defaults")) {
-            pros::lcd::print(1, "LOG: LemLib def");
+        // Use simple filename that we know works
+        if (telem::tuning_logger_init("telemetry")) {
+            pros::lcd::print(1, "LOG: Angular PID");
             pros::lcd::print(0, "Logger init SUCCESS");
             printf("[AUTON] Auto-logging started\n");
 
@@ -184,28 +185,70 @@ void autonomous() {
     #endif
 
     // ========================================================================
-    // PID TUNING TESTS - ISOLATED (includes telemetry logging)
+    // ANGULAR PID TUNING - 90 degree turns
+    // ========================================================================
+    // Simple test: Turn 90° clockwise, return to start
+    // Telemetry logs heading, allows manual PID tuning
+    // ========================================================================
+
+    pros::lcd::set_text(2, "Angular PID Test");
+    pros::lcd::set_text(3, "Resetting pose...");
+    pros::delay(100);  // Small delay before setPose
+
+    chassis.setPose(0, 0, 0);
+    printf("[AUTON] Pose reset to (0, 0, 0)\n");
+
+    pros::lcd::set_text(3, "90deg turns x4");
+    printf("[AUTON] Starting angular PID test in 1 second\n");
+    pros::delay(1000);
+
+    // Do 4x 90° turns to return to original heading
+    for (int i = 0; i < 4; i++) {
+        float target_heading = (i + 1) * 90.0;
+        pros::lcd::print(4, "Turn %d: %.0f deg", i+1, target_heading);
+        printf("[AUTON] Turn %d: target %.0f degrees\n", i+1, target_heading);
+
+        chassis.turnToHeading(target_heading, 3000);
+        chassis.waitUntilDone();
+
+        lemlib::Pose current = chassis.getPose();
+        printf("[AUTON] Turn %d complete: actual %.1f degrees\n", i+1, current.theta);
+
+        pros::delay(500);  // Pause between turns
+    }
+
+    printf("[AUTON] All turns complete\n");
+
+    lemlib::Pose final = chassis.getPose();
+    pros::lcd::set_text(3, "TEST COMPLETE");
+    pros::lcd::print(4, "Final heading: %.1f deg", final.theta);
+
+    // Extra delay to ensure telemetry captures everything
+    pros::delay(1000);
+
+    // ========================================================================
+    // OLD PID TUNING TESTS (archived - use gain sweep instead!)
     // ========================================================================
 
     // SIMPLE TEST: Just drive forward 48 inches (no turn)
     // Speed: 100 (full speed for fast autonomous)
-    chassis.setPose(0, 0, 0);
-    pros::lcd::set_text(2, "Test: 48\" @ SPEED 100");
-    pros::delay(1000);
-
-    pros::lcd::set_text(3, "LemLib Defaults...");
-    chassis.moveToPoint(0, 48, 5000, {
-        .forwards = true,
-        .maxSpeed = 100
-        // Using LemLib recommended defaults: kP=10, kD=3, slew=20
-    });
-    chassis.waitUntilDone();
-    pros::delay(1000);
-
-    lemlib::Pose final = chassis.getPose();
-    pros::lcd::set_text(3, "TEST COMPLETE");
-    pros::lcd::print(4, "Y: %.1f\" (target 48)", final.y);
-    pros::delay(3000);
+    // chassis.setPose(0, 0, 0);
+    // pros::lcd::set_text(2, "Test: 48\" @ SPEED 100");
+    // pros::delay(1000);
+    //
+    // pros::lcd::set_text(3, "LemLib Defaults...");
+    // chassis.moveToPoint(0, 48, 5000, {
+    //     .forwards = true,
+    //     .maxSpeed = 100
+    //     // Using LemLib recommended defaults: kP=10, kD=3, slew=20
+    // });
+    // chassis.waitUntilDone();
+    // pros::delay(1000);
+    //
+    // lemlib::Pose final = chassis.getPose();
+    // pros::lcd::set_text(3, "TEST COMPLETE");
+    // pros::lcd::print(4, "Y: %.1f\" (target 48)", final.y);
+    // pros::delay(3000);
 
     // ========================================================================
     // OTHER TESTS

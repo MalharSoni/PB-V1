@@ -147,10 +147,14 @@ lemlib::ControllerSettings lateralPID(
 );
 
 // Angular PID (Turning)
+// TUNING HISTORY:
+//   kP=2.2, kD=10 → 4° overshoot on 90° turns (user report)
+//   kP=2.2, kD=15 → 17° overshoot on 90° turns (telemetry data)
+//   kP=2.2, kD=25 → Testing higher damping
 lemlib::ControllerSettings angularPID(
     2.2,    // kP - Proportional gain (turn aggression)
     0,      // kI - Integral gain (usually 0 for turning)
-    10,     // kD - Derivative gain (prevents overshoot on turns)
+    25,     // kD - Derivative gain (increased from 15 to reduce 17° overshoot)
     3,      // Anti-windup range
     2,      // Small error range (degrees) - relaxed from 1°
     100,    // Small error timeout (ms)

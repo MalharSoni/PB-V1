@@ -99,7 +99,8 @@
 // ============================================================================
 // Auto-start logging during autonomous (for PID tuning)
 // Comment out this line to disable autonomous logging during competition
-#define ENABLE_AUTON_LOGGING
+// TEMPORARILY DISABLED: Using manual logging in driver control instead
+// #define ENABLE_AUTON_LOGGING
 
 // ============================================================================
 // GLOBAL TOGGLE VARIABLES

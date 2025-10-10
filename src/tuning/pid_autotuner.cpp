@@ -1,5 +1,5 @@
 #include "tuning/pid_autotuner.hpp"
-#include "pros/lcd.h"
+#include "main.h"
 #include "pros/rtos.hpp"
 #include <cmath>
 #include <algorithm>

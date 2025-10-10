@@ -141,11 +141,27 @@ void close() {
         return;
     }
 
+    printf("[slog] Closing... Queue has %d lines to flush\n", queue_size());
+
+    // Wait for queue to drain (up to 10 seconds)
+    int wait_count = 0;
+    while (!queue_empty() && wait_count < 100) {
+        pros::delay(100);  // Check every 100ms
+        wait_count++;
+        if (wait_count % 10 == 0) {
+            printf("[slog] Still flushing... %d lines remaining\n", queue_size());
+        }
+    }
+
+    if (!queue_empty()) {
+        printf("[slog] WARNING: Queue not empty after 10s! Forcing close. %d lines lost.\n", queue_size());
+    }
+
     is_running = false;
 
     // Wait for writer task to finish
     if (writer_task != nullptr) {
-        pros::delay(100);  // Give it time to finish current write
+        pros::delay(200);  // Give it time to finish final write
         delete writer_task;
         writer_task = nullptr;
     }
@@ -154,6 +170,7 @@ void close() {
     if (logfile != nullptr) {
         fflush(logfile);
         fclose(logfile);
+        printf("[slog] File closed: %s\n", filename);
         logfile = nullptr;
     }
 

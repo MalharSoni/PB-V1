@@ -42,10 +42,19 @@ static int rotation_counter = 0;
  */
 inline void handle_toggle_logging() {
     if (logging_active) {
-        // Turn off
+        // Turn off - show flushing message
+        pros::lcd::print(1, "FLUSHING...");
+        pros::lcd::print(2, "Please wait");
+        pros::lcd::print(3, "");
+
         telem::tuning_logger_close();
+
         logging_active = false;
-        pros::lcd::print(1, "LOG OFF");
+        pros::lcd::print(1, "LOG SAVED!");
+        pros::lcd::print(2, "Safe to remove SD");
+        pros::lcd::print(3, "");
+        master.rumble("..");  // Double rumble = save complete
+        pros::delay(2000);  // Show message for 2 seconds
     } else {
         // Check if SD card is inserted before trying to log
         if (!pros::usd::is_installed()) {
