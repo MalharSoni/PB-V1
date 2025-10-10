@@ -48,6 +48,7 @@ private:
     FILE* logfile;
     bool logging;
     uint32_t startTime;
+    char currentFilename[64];  // Store filename for reopening
 };
 
 } // namespace subsystems

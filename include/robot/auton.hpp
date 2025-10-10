@@ -39,6 +39,26 @@ public:
     void odomDriveTest();
 
     /**
+     * @brief ISOLATED lateral PID test - Forward movement ONLY
+     *
+     * Tests lateral PID tuning with NO turns:
+     * - Drive 24" forward at different speeds
+     * - Logs: time, X, Y, target, error every 50ms
+     * - Use to tune: kP, kI, kD, exit conditions
+     */
+    void lateralPIDTest();
+
+    /**
+     * @brief ISOLATED angular PID test - Turning ONLY
+     *
+     * Tests angular PID tuning with NO driving:
+     * - Turn to: 90°, 180°, 270°, 0° (stay in place)
+     * - Logs: time, heading, target, error every 50ms
+     * - Use to tune: kP, kI, kD, exit conditions
+     */
+    void angularPIDTest();
+
+    /**
      * @brief Odometry tuning test - Drive in a 24" x 24" square
      *
      * Tests odometry accuracy by driving in a square pattern.

@@ -11,31 +11,38 @@ void Telemetry::init() {
     // Generate filename with timestamp
     time_t now = time(nullptr);
     struct tm* timeinfo = localtime(&now);
-    char filename[64];
-    snprintf(filename, sizeof(filename), "/usd/telemetry_%02d%02d_%02d%02d%02d.csv",
+    snprintf(currentFilename, sizeof(currentFilename), "/usd/telemetry_%02d%02d_%02d%02d%02d.csv",
              timeinfo->tm_mon + 1, timeinfo->tm_mday,
              timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 
     // Open file for writing
-    logfile = fopen(filename, "w");
+    logfile = fopen(currentFilename, "w");
 
     if (logfile == nullptr) {
         // Fallback to simple filename if timestamp fails
-        logfile = fopen("/usd/telemetry.csv", "w");
+        snprintf(currentFilename, sizeof(currentFilename), "/usd/telemetry.csv");
+        logfile = fopen(currentFilename, "w");
     }
 
     if (logfile != nullptr) {
         // Write CSV header
-        fprintf(logfile, "time_ms,x,y,theta,");
-        fprintf(logfile, "lf_temp,lm_temp,rf_temp,rm_temp,");
-        fprintf(logfile, "lf_curr,lm_curr,rf_curr,rm_curr,");
-        fprintf(logfile, "battery_mv,velocity\n");
+        fprintf(logfile, "time_ms,x,y,theta,lf_temp,lm_temp,rf_temp,rm_temp,lf_curr,lm_curr,rf_curr,rm_temp,battery_mv,velocity\n");
+        fflush(logfile);
+
+        // Close and reopen to force header to disk
+        fclose(logfile);
+        logfile = fopen(currentFilename, "a");
+
+        if (logfile == nullptr) {
+            printf("[Telemetry] ERROR: Failed to reopen\n");
+            logging = false;
+            return;
+        }
 
         logging = true;
         startTime = pros::millis();
 
-        // Console confirmation
-        printf("[Telemetry] Logging to %s\n", filename);
+        printf("[Telemetry] Logging to %s\n", currentFilename);
     } else {
         printf("[Telemetry] ERROR: Failed to open log file\n");
         logging = false;
@@ -43,7 +50,9 @@ void Telemetry::init() {
 }
 
 void Telemetry::log() {
-    if (!logging || logfile == nullptr) return;
+    if (!logging) {
+        return;
+    }
 
     // Get current pose
     lemlib::Pose pose = chassis.getPose();
@@ -73,27 +82,34 @@ void Telemetry::log() {
     // Get elapsed time
     uint32_t elapsed = pros::millis() - startTime;
 
-    // Write data to CSV
-    fprintf(logfile, "%u,%.2f,%.2f,%.2f,",
-            elapsed, pose.x, pose.y, pose.theta);
-    fprintf(logfile, "%.1f,%.1f,%.1f,%.1f,",
-            lf_temp, lm_temp, rf_temp, rm_temp);
-    fprintf(logfile, "%.0f,%.0f,%.0f,%.0f,",
-            lf_curr, lm_curr, rf_curr, rm_curr);
-    fprintf(logfile, "%d,%.1f\n",
+    // Write complete line to CSV
+    fprintf(logfile, "%u,%.2f,%.2f,%.2f,%.1f,%.1f,%.1f,%.1f,%.0f,%.0f,%.0f,%.0f,%d,%.1f\n",
+            elapsed, pose.x, pose.y, pose.theta,
+            lf_temp, lm_temp, rf_temp, rm_temp,
+            lf_curr, lm_curr, rf_curr, rm_curr,
             battery, avg_velocity);
 
-    // Flush to ensure data is written (important for crashes)
     fflush(logfile);
+
+    // Periodic close/reopen every 5 samples to force data to disk
+    static int log_counter = 0;
+    log_counter++;
+    if (log_counter % 5 == 0) {
+        fclose(logfile);
+        logfile = fopen(currentFilename, "a");
+        if (logfile == nullptr) {
+            logging = false;
+        }
+    }
 }
 
 void Telemetry::close() {
     if (logfile != nullptr) {
         fclose(logfile);
         logfile = nullptr;
-        logging = false;
-        printf("[Telemetry] Log file closed\n");
     }
+    logging = false;
+    printf("[Telemetry] Log file closed\n");
 }
 
 } // namespace subsystems

@@ -347,16 +347,16 @@ void Auton::odomDriveTest() {
 
     // Set starting position at origin
     chassis->setPose(0, 0, 0);
-    pros::delay(1000);
+    // pros::delay(1000);
 
-    // Log telemetry during test (if telemetry is running)
-    uint32_t last_log = pros::millis();
-    auto log_periodic = [&]() {
-        if (pros::millis() - last_log > 50) {  // Log every 50ms
-            telemetry.log();
-            last_log = pros::millis();
-        }
-    };
+    // // Log telemetry during test (if telemetry is running)
+    // uint32_t last_log = pros::millis();
+    // auto log_periodic = [&]() {
+    //     if (pros::millis() - last_log > 50) {  // Log every 50ms
+    //         telemetry.log();
+    //         last_log = pros::millis();
+    //     }
+    // };
 
     // ========================================================================
     // PHASE 1: Drive forward 48 inches
@@ -364,11 +364,7 @@ void Auton::odomDriveTest() {
     pros::lcd::clear_line(3);
     pros::lcd::print(3, "Phase 1: Forward 48\"");
 
-    chassis->moveToPoint(0, 48, 5000, {.forwards = true, .maxSpeed = 60, .minSpeed = 20});
-    while (!chassis->isInMotion() == false) {  // While moving
-        log_periodic();
-        pros::delay(10);
-    }
+    chassis->moveToPoint(0, 24, 5000, {.forwards = true, .maxSpeed = 60});
     chassis->waitUntilDone();
     pros::delay(250);
 
@@ -382,7 +378,7 @@ void Auton::odomDriveTest() {
     pros::lcd::clear_line(3);
     pros::lcd::print(3, "Phase 2: Turn left 90");
 
-    chassis->turnToHeading(90, 3000, {.maxSpeed = 60, .minSpeed = 15});
+    chassis->turnToHeading(90, 3000, {.maxSpeed = 60});
     chassis->waitUntilDone();
     pros::delay(250);
 
@@ -396,7 +392,7 @@ void Auton::odomDriveTest() {
     pros::lcd::clear_line(3);
     pros::lcd::print(3, "Phase 3: Turn to 0");
 
-    chassis->turnToHeading(0, 3000, {.maxSpeed = 60, .minSpeed = 15});
+    chassis->turnToHeading(0, 3000, {.maxSpeed = 60});
     chassis->waitUntilDone();
     pros::delay(250);
 
@@ -410,7 +406,7 @@ void Auton::odomDriveTest() {
     pros::lcd::clear_line(3);
     pros::lcd::print(3, "Phase 4: Back to start");
 
-    chassis->moveToPoint(0, 0, 5000, {.forwards = false, .maxSpeed = 60, .minSpeed = 20});
+    chassis->moveToPoint(0, 0, 5000, {.forwards = false, .maxSpeed = 60});
     chassis->waitUntilDone();
     pros::delay(250);
 
@@ -501,6 +497,173 @@ void Auton::odomSquareTest() {
 
     // Keep final position on screen
     pros::delay(10000);
+}
+
+void Auton::lateralPIDTest() {
+    // ========================================================================
+    // ISOLATED LATERAL PID TEST - Forward Movement ONLY
+    // ========================================================================
+    // Tests lateral (forward/backward) PID with NO turns.
+    // Logs all data to SD card for analysis.
+    // NOTE: Telemetry logging is handled by tuning_telemetry_task (100 Hz)
+    //       Started in initialize() - no need to manually call telemetry.init()
+    // ========================================================================
+
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "==== LATERAL PID TEST ====");
+    pros::lcd::set_text(1, "Testing forward movement");
+    pros::lcd::set_text(2, "Auto-logging to SD card");
+
+    pros::lcd::set_text(3, "Waiting 2 seconds...");
+    pros::delay(2000);  // Let robot settle
+
+    // ========================================================================
+    // DRIVE TEST: Just drive forward using go_forward (no setPose needed)
+    // ========================================================================
+    pros::lcd::set_text(3, "Starting drive...");
+
+    // Get starting position (whatever it is)
+    lemlib::Pose startPose = chassis->getPose();
+    pros::lcd::print(4, "Start: X:%.1f Y:%.1f", startPose.x, startPose.y);
+    pros::delay(1000);  // Show starting position
+
+    pros::lcd::set_text(3, "Driving 24\" forward...");
+
+    uint32_t start_time = pros::millis();
+
+    // Use go_forward which drives relative to current position
+    // Telemetry is logged automatically by tuning_telemetry_task at 100 Hz
+    go_forward(24, 5000, 60);
+
+    // Monitor movement without manual logging
+    lemlib::Pose prev_pose = startPose;
+
+    for (int i = 0; i < 200; i++) {  // 200 iterations = 10 seconds max
+        lemlib::Pose pose = chassis->getPose();
+
+        // Calculate position change from start
+        float delta_y = pose.y - startPose.y;
+        float delta_x = pose.x - startPose.x;
+        float distance_moved = sqrt(delta_x * delta_x + delta_y * delta_y);
+
+        // Update LCD with distance moved
+        pros::lcd::print(5, "Moved: %.1f\"", distance_moved);
+
+        // Exit if robot stopped moving (position change < 0.01" for 3 samples)
+        static int stopped_count = 0;
+        float pose_change = sqrt(
+            (pose.x - prev_pose.x) * (pose.x - prev_pose.x) +
+            (pose.y - prev_pose.y) * (pose.y - prev_pose.y)
+        );
+
+        if (pose_change < 0.01) {
+            stopped_count++;
+            if (stopped_count >= 6) break;  // 300ms of no movement
+        } else {
+            stopped_count = 0;
+        }
+
+        prev_pose = pose;
+        pros::delay(50);
+    }
+
+    chassis->waitUntilDone();
+    pros::delay(500);
+
+    // Final results
+    lemlib::Pose finalPose = chassis->getPose();
+    float delta_y = finalPose.y - startPose.y;
+    float delta_x = finalPose.x - startPose.x;
+    float total_distance = sqrt(delta_x * delta_x + delta_y * delta_y);
+    float error = 24.0 - total_distance;
+    uint32_t duration = pros::millis() - start_time;
+
+    pros::lcd::print(4, "Moved: %.2f\" Err:%.2f\"", total_distance, error);
+    pros::lcd::print(6, "Time:%dms", duration);
+
+    // Note: Telemetry is closed by autonomous() after this function returns
+    pros::lcd::set_text(7, "TEST COMPLETE - Check SD");
+    pros::delay(5000);  // Show results for 5 seconds
+}
+
+void Auton::angularPIDTest() {
+    // ========================================================================
+    // ISOLATED ANGULAR PID TEST - Turning ONLY
+    // ========================================================================
+    // Tests angular (turning) PID with NO driving.
+    // Robot stays in place and only rotates.
+    // Logs all data to SD card for analysis.
+    // ========================================================================
+
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "==== ANGULAR PID TEST ====");
+    pros::lcd::set_text(1, "Testing turns (no driving)");
+    pros::lcd::set_text(2, "Logging to SD card...");
+
+    // Initialize telemetry for logging
+    telemetry.init();
+
+    // Set starting position
+    chassis->setPose(0, 0, 0);
+    pros::delay(1000);
+
+    // Target headings to test
+    float targets[] = {90.0, 180.0, 270.0, 0.0};
+    const char* labels[] = {"90deg (left)", "180deg (back)", "270deg (right)", "0deg (start)"};
+
+    for (int i = 0; i < 4; i++) {
+        float target = targets[i];
+
+        // Display test info
+        pros::lcd::print(3, "Test %d: %s", i+1, labels[i]);
+
+        uint32_t start_time = pros::millis();
+        chassis->turnToHeading(target, 3000, {.maxSpeed = 60});
+
+        // Log every 50ms for up to 3 seconds (60 iterations)
+        for (int j = 0; j < 60; j++) {
+            lemlib::Pose pose = chassis->getPose();
+            float error = target - pose.theta;
+
+            // Normalize error to [-180, 180]
+            while (error > 180) error -= 360;
+            while (error < -180) error += 360;
+
+            // Update LCD
+            pros::lcd::print(4, "H:%.1f  Err:%.1f", pose.theta, error);
+
+            // Log to SD card
+            telemetry.log();
+
+            // Exit early if close to target (within 2 degrees)
+            if (abs(error) < 2.0) break;
+
+            pros::delay(50);
+        }
+
+        chassis->waitUntilDone();
+        pros::delay(500);
+
+        // Final heading for this test
+        lemlib::Pose finalPose = chassis->getPose();
+        float finalError = target - finalPose.theta;
+
+        // Normalize error
+        while (finalError > 180) finalError -= 360;
+        while (finalError < -180) finalError += 360;
+
+        uint32_t duration = pros::millis() - start_time;
+
+        pros::lcd::print(5, "Final H:%.1f Err:%.1f", finalPose.theta, finalError);
+        pros::lcd::print(6, "Time: %dms", duration);
+        pros::delay(2000);
+    }
+
+    // Close telemetry
+    telemetry.close();
+
+    pros::lcd::set_text(7, "TEST COMPLETE - Check SD");
+    pros::delay(5000);
 }
 
 void Auton::motorDiagnostics() {

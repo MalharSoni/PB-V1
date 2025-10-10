@@ -4,8 +4,13 @@
 #include "robot/brain_ui.hpp"
 #include "pros/misc.h"
 #include "pros/motors.h"
+#include "logging/tuning_logger.hpp"
+#include "ui/runtime_controls.hpp"
 
 using namespace subsystems;
+
+// Forward declarations for background tasks
+void tuning_telemetry_task(void* param);
 
 /**
  * @brief Background task to update LCD with robot position
@@ -71,6 +76,19 @@ void initialize() {
     alerts.resetDriftTimer();
 
     // ========================================================================
+    // TELEMETRY SYSTEM - High-priority logging
+    // ========================================================================
+    // Initialize runtime controls (A/B/X/Y buttons for logging control)
+    ui::runtime_controls_init();
+
+    // Start high-priority telemetry task (100 Hz, captures data during motion)
+    // NOTE: This task is ABOVE motion task priority to prevent starvation
+    pros::Task tuning_telem_task(tuning_telemetry_task, nullptr,
+                                 TASK_PRIORITY_DEFAULT + 1,  // High priority!
+                                 TASK_STACK_DEPTH_DEFAULT,
+                                 "Tuning Telemetry");
+
+    // ========================================================================
     // GAME-SPECIFIC INITIALIZATION (Push Back)
     // ========================================================================
     // No game-specific initialization needed for Push Back intake
@@ -79,7 +97,10 @@ void initialize() {
 /**
  * Runs when robot is disabled (competition switch off).
  */
-void disabled() {}
+void disabled() {
+    // Close telemetry logger to flush remaining data
+    telem::tuning_logger_close();
+}
 
 /**
  * Runs when competition switch is connected.
@@ -116,22 +137,95 @@ void competition_initialize() {
  */
 void autonomous() {
     // ========================================================================
-    // TELEMETRY LOGGING - Start recording autonomous
+    // TELEMETRY AUTO-LOGGING (For PID Tuning)
     // ========================================================================
-    telemetry.init();
-    alerts.resetDriftTimer();
+    // Auto-start logging if ENABLE_AUTON_LOGGING is defined in globals.hpp
+    // To disable for competition, comment out the #define in globals.hpp
+    #ifdef ENABLE_AUTON_LOGGING
+    pros::lcd::print(0, "Checking SD card...");
+    pros::delay(100);
 
-    // Run selected autonomous routine from UI
-    // auton.run_auton(brainUI.getSelectedAuton());
+    if (pros::usd::is_installed()) {
+        pros::lcd::print(0, "SD card OK!");
+        pros::delay(200);
+
+        // IMPORTANT: Close any existing logger first
+        // This handles the case where manual logging was left active
+        telem::tuning_logger_close();
+        pros::delay(50);
+
+        // Use descriptive filename: LemLib defaults
+        if (telem::tuning_logger_init("lemlib_defaults")) {
+            pros::lcd::print(1, "LOG: LemLib def");
+            pros::lcd::print(0, "Logger init SUCCESS");
+            printf("[AUTON] Auto-logging started\n");
+
+            // Check if logger is actually ready
+            if (telem::tuning_logger_ready()) {
+                pros::lcd::print(0, "Logger READY!");
+            } else {
+                pros::lcd::print(0, "Logger NOT READY!");
+            }
+
+            // Give writer task time to start and flush header to SD card
+            pros::delay(200);
+        } else {
+            pros::lcd::print(1, "LOG FAILED!");
+            pros::lcd::print(0, "Init returned FALSE");
+            printf("[AUTON] Failed to start logger\n");
+            pros::delay(2000);  // Show error
+        }
+    } else {
+        pros::lcd::print(1, "NO SD CARD!");
+        pros::lcd::print(0, "usd::is_installed() = false");
+        printf("[AUTON] No SD card detected\n");
+        pros::delay(2000);  // Show error
+    }
+    #endif
+
+    // ========================================================================
+    // PID TUNING TESTS - ISOLATED (includes telemetry logging)
+    // ========================================================================
+
+    // SIMPLE TEST: Just drive forward 48 inches (no turn)
+    // Speed: 100 (full speed for fast autonomous)
+    chassis.setPose(0, 0, 0);
+    pros::lcd::set_text(2, "Test: 48\" @ SPEED 100");
+    pros::delay(1000);
+
+    pros::lcd::set_text(3, "LemLib Defaults...");
+    chassis.moveToPoint(0, 48, 5000, {
+        .forwards = true,
+        .maxSpeed = 100
+        // Using LemLib recommended defaults: kP=10, kD=3, slew=20
+    });
+    chassis.waitUntilDone();
+    pros::delay(1000);
+
+    lemlib::Pose final = chassis.getPose();
+    pros::lcd::set_text(3, "TEST COMPLETE");
+    pros::lcd::print(4, "Y: %.1f\" (target 48)", final.y);
+    pros::delay(3000);
+
+    // ========================================================================
+    // OTHER TESTS
+    // ========================================================================
 
     // MOTOR DIAGNOSTICS - Check for motor imbalance
     // auton.motorDiagnostics();
 
     // COMPLETE ODOMETRY TEST - Out and back with turns
-    auton.odomDriveTest();
+    // auton.odomDriveTest();
 
     // ODOMETRY TUNING TEST - Drive in a square
     // auton.odomSquareTest();
+
+    // ========================================================================
+    // GAME ROUTINES
+    // ========================================================================
+
+    // Run selected autonomous routine from UI
+    // auton.run_auton(brainUI.getSelectedAuton());
 
     // Push Back game routines:
     // auton.pushBackSimple();  // Simple intake and score routine
@@ -144,9 +238,30 @@ void autonomous() {
     // auton.skills();
 
     // ========================================================================
-    // TELEMETRY LOGGING - Stop recording
+    // TELEMETRY AUTO-CLOSE
     // ========================================================================
-    telemetry.close();
+    #ifdef ENABLE_AUTON_LOGGING
+    // Get stats before closing
+    slog::Stats stats;
+    telem::tuning_logger_get_stats(stats);
+
+    pros::lcd::print(0, "Closing logger...");
+    pros::lcd::print(2, "Lines: %u Drops: %u", stats.lines, stats.drops);
+    pros::lcd::print(3, "Q: %d/%d Hi: %d", stats.queue_depth, stats.queue_capacity, stats.high_water);
+
+    // Give writer task time to flush remaining data to SD card
+    // Increased delay to ensure all buffered data is written
+    pros::delay(500);
+
+    telem::tuning_logger_close();
+
+    pros::lcd::print(1, "LOG CLOSED");
+    pros::lcd::print(0, "Check SD card!");
+    printf("[AUTON] Auto-logging stopped\n");
+
+    // Hold stats on screen for 3 seconds
+    pros::delay(3000);
+    #endif
 }
 
 /**
@@ -168,6 +283,17 @@ void alerts_task(void* param) {
     while (true) {
         alerts.check();
         pros::delay(100);  // Check every 100ms
+    }
+}
+
+/**
+ * @brief High-priority telemetry logging task (100 Hz)
+ * Runs at TASK_PRIORITY_DEFAULT + 1 to capture data during motion
+ */
+void tuning_telemetry_task(void* param) {
+    while (true) {
+        telem::tuning_logger_tick();
+        pros::delay(10);  // 100 Hz
     }
 }
 
@@ -199,6 +325,12 @@ void opcontrol() {
     // pros::delay(2000);
     // brainUI.showOperationScreen();
 
+    // Runtime controls update counter
+    int ui_counter = 0;
+
+    // IMU health check counter (check every 2 seconds)
+    int imu_check_counter = 0;
+
     while (true) {
         // ====================================================================
         // DRIVER CONTROLS
@@ -215,34 +347,55 @@ void opcontrol() {
                    DIGITAL_L2);  // L2: Score Level 3
 
         // Pneumatics (if still using clamp/doinker from High Stakes)
-        clamp.run(DIGITAL_Y);      // Y button: clamp
+        // NOTE: Y button now controls telemetry (rotate file)
+        clamp.run(DIGITAL_DOWN);   // Down button: clamp
         doinker.run(DIGITAL_RIGHT); // Right button: doinker
 
         // ====================================================================
-        // WALL ALIGNMENT (Optional - for precision positioning)
+        // TELEMETRY RUNTIME CONTROLS (A/B/X/Y buttons)
+        // ====================================================================
+        // A: Toggle logging on/off
+        // B: Cycle rate (100/50/25/10 Hz)
+        // X: Set waypoint marker
+        // Y: Rotate log file
+        // (Wall alignment moved to D-pad)
         // ====================================================================
 
-        // A button: Align angle to wall
-        if (master.get_digital_new_press(DIGITAL_A)) {
+        // Update runtime controls every 100ms
+        ui_counter++;
+        if (ui_counter >= 10) {  // 10 * 10ms = 100ms
+            ui::runtime_controls_update();
+            ui_counter = 0;
+        }
+
+        // ====================================================================
+        // IMU HEALTH MONITORING
+        // ====================================================================
+        // Check IMU status every 2 seconds
+        imu_check_counter++;
+        if (imu_check_counter >= 200) {  // 200 * 10ms = 2 seconds
+            if (!robot_config::check_imu_status()) {
+                master.print(2, 0, "IMU ERROR!");
+                printf("[OPCONTROL] IMU error detected!\n");
+            }
+            imu_check_counter = 0;
+        }
+
+        // ====================================================================
+        // WALL ALIGNMENT (Optional - moved to D-pad)
+        // ====================================================================
+
+        // Down+Left: Align angle to wall
+        if (master.get_digital_new_press(DIGITAL_LEFT)) {
             distanceAlign.calculateAngleOneWall(0.0);
-            alerts.resetDriftTimer();  // Reset drift timer after correction
+            alerts.resetDriftTimer();
         }
 
-        // X button: Align distance to wall
-        if (master.get_digital_new_press(DIGITAL_X)) {
+        // Down+Up: Align distance to wall
+        if (master.get_digital_new_press(DIGITAL_UP)) {
             distanceAlign.calculateDistOneWall(0.0, 72.0);
-            alerts.resetDriftTimer();  // Reset drift timer after correction
+            alerts.resetDriftTimer();
         }
-
-        // ====================================================================
-        // UI UPDATES
-        // ====================================================================
-
-        // LVGL disabled - using simple LCD display instead
-        // brainUI.updateTelemetry();
-
-        // Controller screen display (Note: Alerts will override this periodically)
-        // master.print(0, 0, "x:%5.3Lf y:%5.3Lf", chassis.getPose().x, chassis.getPose().y);
 
         pros::delay(10);  // Small delay to prevent CPU overload
     }

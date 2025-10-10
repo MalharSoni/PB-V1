@@ -14,6 +14,16 @@ void calibrate_imu() {
     master.print(0, 0, "IMU calibrating...");
     pros::lcd::print(3, "IMU: Calibrating...");
 
+    // Check if IMU is connected before attempting calibration
+    std::uint32_t status = inertial.get_status();
+    if (status == PROS_ERR) {
+        std::cout << "IMU NOT FOUND on port " << INERTIAL << "!" << std::endl;
+        master.print(0, 0, "IMU NOT FOUND!");
+        pros::lcd::print(3, "IMU: NOT CONNECTED - Check Port 10!");
+        pros::delay(2000);
+        return;
+    }
+
     inertial.reset();
 
     // Wait for IMU to finish calibration
@@ -111,6 +121,27 @@ void initialize() {
     master.print(0, 0, "Robot Ready!");
     pros::delay(1000);
     master.clear();
+}
+
+// ============================================================================
+// IMU HEALTH CHECK
+// ============================================================================
+
+bool check_imu_status() {
+    // Check if IMU is connected and functioning
+    std::uint32_t status = inertial.get_status();
+
+    // PROS_ERR means sensor not connected or communication failure
+    if (status == PROS_ERR) {
+        return false;
+    }
+
+    // Check for IMU-specific error flags
+    if (status & pros::c::E_IMU_STATUS_ERROR) {
+        return false;
+    }
+
+    return true;  // IMU is healthy
 }
 
 } // namespace robot_config

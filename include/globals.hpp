@@ -95,6 +95,13 @@
 #define ANALOG_RIGHT_X pros::E_CONTROLLER_ANALOG_RIGHT_X
 
 // ============================================================================
+// TELEMETRY CONFIGURATION
+// ============================================================================
+// Auto-start logging during autonomous (for PID tuning)
+// Comment out this line to disable autonomous logging during competition
+#define ENABLE_AUTON_LOGGING
+
+// ============================================================================
 // GLOBAL TOGGLE VARIABLES
 // ============================================================================
 extern bool pistonToggle;

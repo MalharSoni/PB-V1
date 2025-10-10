@@ -54,4 +54,15 @@ void initialize();
  */
 void calibrate_imu();
 
+/**
+ * @brief Check if IMU is healthy and functioning
+ *
+ * Use this to detect IMU failures during operation.
+ * Can be called periodically to monitor IMU health.
+ *
+ * @return true if IMU is connected and working
+ * @return false if IMU has an error or is disconnected
+ */
+bool check_imu_status();
+
 } // namespace robot_config

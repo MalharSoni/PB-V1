@@ -128,16 +128,22 @@ lemlib::OdomSensors sensors(
 // ============================================================================
 
 // Lateral PID (Forward/Backward Movement)
+// TUNING HISTORY:
+//   kP=10, kD=1 → 50.04" (2.04" overshoot)
+//   kP=8,  kD=3 → 26.41" (21.59" undershoot - too weak!)
+//   kP=10, kD=2 → 48.08" but overshoots to 50-51" then dives back (bad path!)
+//   kP=10, kD=5/10 → Still overshoots
+//   kP=10, kD=3 (LemLib recommended) → Testing official defaults
 lemlib::ControllerSettings lateralPID(
-    10,     // kP - Proportional gain (aggression)
-    0,      // kI - Integral gain (steady-state correction)
-    1,      // kD - Derivative gain (dampening/smoothness)
+    10,     // kP - Proportional gain (LemLib default)
+    0,      // kI - Integral gain
+    3,      // kD - Derivative gain (LemLib default)
     3,      // Anti-windup range
-    1,      // Small error range (inches) - close enough to target
-    100,    // Small error timeout (ms) - how long to stay in small error
-    3,      // Large error range (inches) - far from target threshold
-    500,    // Large error timeout (ms) - max time allowed in large error
-    20      // Maximum acceleration/slew rate
+    1,      // Small error range (inches) - LemLib default
+    100,    // Small error timeout (ms)
+    3,      // Large error range (inches) - LemLib default
+    500,    // Large error timeout (ms)
+    20      // Slew rate - LemLib default
 );
 
 // Angular PID (Turning)
@@ -146,9 +152,9 @@ lemlib::ControllerSettings angularPID(
     0,      // kI - Integral gain (usually 0 for turning)
     10,     // kD - Derivative gain (prevents overshoot on turns)
     3,      // Anti-windup range
-    1,      // Small error range (degrees)
+    2,      // Small error range (degrees) - relaxed from 1°
     100,    // Small error timeout (ms)
-    3,      // Large error range (degrees)
+    5,      // Large error range (degrees) - relaxed from 3°
     500,    // Large error timeout (ms)
     0       // Maximum acceleration/slew (0 = no slew on turns)
 );
